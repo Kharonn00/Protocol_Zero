@@ -1,0 +1,15 @@
+import random
+
+# The User's Status
+hand_is_broken = True
+
+# The list of Dooms
+choices = ["Write Code", "Clean Your Room", "Suffer in Silence"]
+
+if hand_is_broken:
+	choices.append("Do 20 Squats")  # Legs are fine
+else:
+	choices.append("Do 10 pushups") # The classic
+
+print("Oh mighty computer, the user is broken. What should he do?")
+print(random.choice(choices))
