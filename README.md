@@ -25,7 +25,7 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
     ```
 3.  **Run the Engine:**
     ```bash
-    python vape_oracle.py
+    python oracle.py
     ```
 
 ## 🎮 Usage Example
