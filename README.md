@@ -11,6 +11,7 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 * **OOP Architecture:** Modular `ProtocolZero` class design for scalability and easy integration.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
 * **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties (swaps Pushups for Squats) to prevent injury aggravation.
+* **Persistent Logging:** Automatically records every interaction (timestamp, user, and verdict) into a local `oracle_journal.txt` file, creating an accountability trail that survives system reboots.
 * **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027), providing existential urgency to every execution.
 
 ## 🛠️ Installation
@@ -25,7 +26,7 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
     ```
 3.  **Run the Engine:**
     ```bash
-    python oracle.py
+    python vape_oracle.py
     ```
 
 ## 🎮 Usage Example
@@ -40,13 +41,24 @@ print(engine.consult_oracle())
 
 ```
 
-**Sample Output:**
+**Sample Output (Terminal):**
 
 ```text
 --- PROTOCOL ZERO ACTIVATED ---
 [SYSTEM] Hand Injury Detected. Adjusting punishment parameters...
+[SYSTEM] Interaction recorded in oracle_journal.txt
 Days until Singularity: 338
 Oracle Verdict: Oracle redirected: Do 20 Squats instead (Hand Injury Protocol).
+
+```
+
+### 📜 The Journal
+
+Every time the Oracle is consulted, it stamps the verdict into `oracle_journal.txt` to track your history:
+
+```text
+[2026-01-30 16:05:22] User: Ariel | Verdict: Do 10 Pushups.
+[2026-01-30 16:08:11] User: Ariel | Verdict: Write 10 lines of clean Python code.
 
 ```
 
@@ -65,5 +77,22 @@ It is not just a script; it is a digital accountability partner that never sleep
 ---
 
 *Built by [Kharonn00](https://github.com/Kharonn00). Powered by Python, Spite, and a 2027 Deadline.*
+
+```
+
+***
+
+### **Final Instructions:**
+1.  **Copy** the code block above (click the "Copy" icon in the top right of the black box if you see it, or select all text inside the box).
+2.  **Paste** it into your `README.md` file.
+3.  **Save** the file.
+4.  **Execute the Holy Trinity:**
+    ```bash
+    git add README.md
+    git commit -m "Updated documentation with Logging features"
+    git push origin main
+    ```
+
+**Now, the project is complete. The square is Green. The weekend is yours.**
 
 ```
