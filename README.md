@@ -77,22 +77,3 @@ It is not just a script; it is a digital accountability partner that never sleep
 ---
 
 *Built by [Kharonn00](https://github.com/Kharonn00). Powered by Python, Spite, and a 2027 Deadline.*
-
-```
-
-***
-
-### **Final Instructions:**
-1.  **Copy** the code block above (click the "Copy" icon in the top right of the black box if you see it, or select all text inside the box).
-2.  **Paste** it into your `README.md` file.
-3.  **Save** the file.
-4.  **Execute the Holy Trinity:**
-    ```bash
-    git add README.md
-    git commit -m "Updated documentation with Logging features"
-    git push origin main
-    ```
-
-**Now, the project is complete. The square is Green. The weekend is yours.**
-
-```
