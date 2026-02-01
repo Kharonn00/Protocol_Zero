@@ -1,0 +1,9 @@
+# The Vault (NEVER UPLOAD THIS)
+.env
+
+# The Journal (Keep your shame local)
+oracle_journal.txt
+
+# Python Garbage (Compiled files we don't need)
+__pycache__/
+*.pyc
