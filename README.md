@@ -9,6 +9,7 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 
 ## ⚡ Features
 * **OOP Architecture:** Modular `ProtocolZero` class design for scalability and easy integration.
+* **Discord Bot Interface:** Remote access to the Oracle via a dedicated Discord bot. Users can summon judgment with `!oracle` from any server.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
 * **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties (swaps Pushups for Squats) to prevent injury aggravation.
 * **Persistent Logging:** Automatically records every interaction (timestamp, user, and verdict) into a local `oracle_journal.txt` file, creating an accountability trail that survives system reboots.
@@ -24,41 +25,57 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
     ```bash
     cd Protocol_Zero
     ```
-3.  **Run the Engine:**
+3.  **Install Dependencies:**
     ```bash
-    python vape_oracle.py
+    pip install discord.py python-dotenv
     ```
 
-## 🎮 Usage Example
+## ⚙️ Configuration (The Vault)
 
-When the user feels a craving, they query the Oracle instance. The engine initializes with the user's profile and target deadline.
+To run the Discord Bot, you must configure your environment variables.
 
-```python
-# Internal Logic Representation
-apocalypse = datetime.date(2027, 1, 1)
-engine = ProtocolZero("Ariel", apocalypse)
-print(engine.consult_oracle())
+1.  Create a file named `.env` in the root directory.
+2.  Add your Discord Bot Token inside:
+    ```env
+    DISCORD_TOKEN=your_token_goes_here_no_quotes
+    ```
+    *(Note: The `.env` file is git-ignored to protect your secrets.)*
 
-```
+## 🎮 Usage
 
-**Sample Output (Terminal):**
-
-```text
---- PROTOCOL ZERO ACTIVATED ---
-[SYSTEM] Hand Injury Detected. Adjusting punishment parameters...
-[SYSTEM] Interaction recorded in oracle_journal.txt
-Days until Singularity: 338
-Oracle Verdict: Oracle redirected: Do 20 Squats instead (Hand Injury Protocol).
+### Option A: Terminal Mode (Local)
+Run the engine directly in your command prompt:
+```bash
+python vape_oracle.py
 
 ```
 
-### 📜 The Journal
+### Option B: Discord Bot Mode (Remote)
 
-Every time the Oracle is consulted, it stamps the verdict into `oracle_journal.txt` to track your history:
+Bring the bot online to listen for commands in your server:
+
+```bash
+python bot.py
+
+```
+
+**Discord Commands:**
+
+* `!oracle` - Summon the engine. The bot will query Protocol Zero and reply with a verdict.
+
+**Sample Output (Discord):**
+
+> **Protocol_Zero_Oracle** *BOT*
+> **The Oracle Speaks:**
+> Oracle redirected: Do 20 Squats instead (Hand Injury Protocol).
+
+## 📜 The Journal
+
+Every time the Oracle is consulted (via Terminal or Discord), it stamps the verdict into `oracle_journal.txt` to track your history:
 
 ```text
-[2026-01-30 16:05:22] User: Ariel | Verdict: Do 10 Pushups.
-[2026-01-30 16:08:11] User: Ariel | Verdict: Write 10 lines of clean Python code.
+[2026-01-31 16:05:22] User: Ariel | Verdict: Do 10 Pushups.
+[2026-01-31 16:08:11] User: Ariel | Verdict: Write 10 lines of clean Python code.
 
 ```
 
@@ -70,7 +87,7 @@ It is not just a script; it is a digital accountability partner that never sleep
 
 ## 🚀 Future Roadmap
 
-* **Discord Bot Integration:** To publicly shame the user in server channels upon failure.
+* **Public Shaming:** Bot will automatically post failure stats to a public "Wall of Shame" channel.
 * **Hardware Lockout:** Integration with smart plugs to physically disable gaming PCs until tasks are verified.
 * **LLM Integration:** Using local AI to generate context-aware insults based on the user's recent commit history.
 
