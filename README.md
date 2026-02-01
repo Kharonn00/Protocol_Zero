@@ -46,7 +46,7 @@ To run the Discord Bot, you must configure your environment variables.
 ### Option A: Terminal Mode (Local)
 Run the engine directly in your command prompt:
 ```bash
-python vape_oracle.py
+python oracle.py
 
 ```
 
