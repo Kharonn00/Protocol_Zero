@@ -46,7 +46,7 @@ To run the Discord Bot, you must configure your environment variables.
 ### Option A: Terminal Mode (Local)
 Run the engine directly in your command prompt:
 ```bash
-python oracle.py
+python vape_oracle.py
 
 ```
 
@@ -79,6 +79,13 @@ Every time the Oracle is consulted, it stamps the verdict into `oracle_journal.t
 This tool relies on the **"Friction Theory"** of habit breaking. By inserting a coding challenge or a physical exercise between the "Urge" and the "Action," Protocol Zero forces the brain to disengage from the craving loop.
 
 It is not just a script; it is a digital accountability partner that never sleeps and never negotiates.
+
+## 🚀 Future Roadmap
+
+* **Analytics Dashboard:** Build a Web Interface (FastAPI) to visualize craving frequency and punishment distribution over time.
+* **Cloud Deployment:** Migrate the bot from local hosting to a 24/7 Virtual Private Server (VPS).
+* **Multi-User Support:** Scale the database schema to track progress for multiple users in a single server.
+* **AI Shaming:** Integrate a local LLM to generate unique, context-aware insults based on the user's failure rate.
 
 ---
 
