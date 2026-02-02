@@ -10,9 +10,9 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 ## ⚡ Features
 * **OOP Architecture:** Modular `ProtocolZero` class design for scalability and easy integration.
 * **Discord Bot Interface:** Remote access to the Oracle via a dedicated Discord bot. Users can summon judgment with `!oracle` from any server.
+* **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence, enabling future analytics and complex querying beyond simple text logs.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
-* **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties (swaps Pushups for Squats) to prevent injury aggravation.
-* **Persistent Logging:** Automatically records every interaction (timestamp, user, and verdict) into a local `oracle_journal.txt` file, creating an accountability trail that survives system reboots.
+* **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties (swaps Pushups for Squats).
 * **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027), providing existential urgency to every execution.
 
 ## 🛠️ Installation
@@ -69,27 +69,16 @@ python bot.py
 > **The Oracle Speaks:**
 > Oracle redirected: Do 20 Squats instead (Hand Injury Protocol).
 
-## 📜 The Journal
+## 📜 The Journal (Legacy)
 
-Every time the Oracle is consulted (via Terminal or Discord), it stamps the verdict into `oracle_journal.txt` to track your history:
-
-```text
-[2026-01-31 16:05:22] User: Ariel | Verdict: Do 10 Pushups.
-[2026-01-31 16:08:11] User: Ariel | Verdict: Write 10 lines of clean Python code.
-
-```
+Every time the Oracle is consulted, it stamps the verdict into `oracle_journal.txt`.
+*(Note: Migration to SQLite `protocol_zero.db` is currently in progress).*
 
 ## 🧠 The Philosophy
 
 This tool relies on the **"Friction Theory"** of habit breaking. By inserting a coding challenge or a physical exercise between the "Urge" and the "Action," Protocol Zero forces the brain to disengage from the craving loop.
 
 It is not just a script; it is a digital accountability partner that never sleeps and never negotiates.
-
-## 🚀 Future Roadmap
-
-* **Public Shaming:** Bot will automatically post failure stats to a public "Wall of Shame" channel.
-* **Hardware Lockout:** Integration with smart plugs to physically disable gaming PCs until tasks are verified.
-* **LLM Integration:** Using local AI to generate context-aware insults based on the user's recent commit history.
 
 ---
 
