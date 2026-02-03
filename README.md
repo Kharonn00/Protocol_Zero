@@ -10,7 +10,7 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 ## ⚡ Features
 * **OOP Architecture:** Modular `ProtocolZero` class design for scalability and easy integration.
 * **Discord Bot Interface:** Remote access to the Oracle via a dedicated Discord bot. Users can summon judgment with `!oracle` from any server.
-* **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence, enabling future analytics and complex querying beyond simple text logs.
+* **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence. All interactions are atomically committed, enabling complex future analytics.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
 * **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties (swaps Pushups for Squats).
 * **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027), providing existential urgency to every execution.
@@ -46,7 +46,7 @@ To run the Discord Bot, you must configure your environment variables.
 ### Option A: Terminal Mode (Local)
 Run the engine directly in your command prompt:
 ```bash
-python vape_oracle.py
+python oracle.py
 
 ```
 
@@ -69,10 +69,12 @@ python bot.py
 > **The Oracle Speaks:**
 > Oracle redirected: Do 20 Squats instead (Hand Injury Protocol).
 
-## 📜 The Journal (Legacy)
+## 🗄️ The Archives (Data Persistence)
 
-Every time the Oracle is consulted, it stamps the verdict into `oracle_journal.txt`.
-*(Note: Migration to SQLite `protocol_zero.db` is currently in progress).*
+Protocol Zero now utilizes a **SQLite Backend** (`protocol_zero.db`).
+
+* **Legacy Mode:** Text file logging (`oracle_journal.txt`) has been deprecated.
+* **Current Mode:** Every verdict is stored as a structured row in the `interactions` table, recording `user_name`, `verdict`, and `timestamp`.
 
 ## 🧠 The Philosophy
 
