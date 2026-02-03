@@ -10,7 +10,8 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 ## ⚡ Features
 * **OOP Architecture:** Modular `ProtocolZero` class design for scalability and easy integration.
 * **Discord Bot Interface:** Remote access to the Oracle via a dedicated Discord bot. Users can summon judgment with `!oracle` from any server.
-* **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence. All interactions are atomically committed, enabling complex future analytics.
+* **Cyberpunk Web Dashboard:** A **FastAPI**-powered visual interface (`/dashboard`) that renders real-time punishment statistics in a dark-mode UI.
+* **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence. All interactions are atomically committed.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
 * **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties (swaps Pushups for Squats).
 * **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027), providing existential urgency to every execution.
@@ -27,7 +28,7 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
     ```
 3.  **Install Dependencies:**
     ```bash
-    pip install discord.py python-dotenv
+    pip install discord.py python-dotenv fastapi uvicorn
     ```
 
 ## ⚙️ Configuration (The Vault)
@@ -46,7 +47,7 @@ To run the Discord Bot, you must configure your environment variables.
 ### Option A: Terminal Mode (Local)
 Run the engine directly in your command prompt:
 ```bash
-python oracle.py
+python vape_oracle.py
 
 ```
 
@@ -59,22 +60,24 @@ python bot.py
 
 ```
 
-**Discord Commands:**
+### Option C: Web Dashboard (Visual)
 
-* `!oracle` - Summon the engine. The bot will query Protocol Zero and reply with a verdict.
+Launch the FastAPI server to view your stats in the browser:
 
-**Sample Output (Discord):**
+```bash
+uvicorn api:app --reload
 
-> **Protocol_Zero_Oracle** *BOT*
-> **The Oracle Speaks:**
-> Oracle redirected: Do 20 Squats instead (Hand Injury Protocol).
+```
+
+* **View Dashboard:** Open `http://127.0.0.1:8000/dashboard`
+* **View Raw JSON:** Open `http://127.0.0.1:8000/stats`
 
 ## 🗄️ The Archives (Data Persistence)
 
 Protocol Zero now utilizes a **SQLite Backend** (`protocol_zero.db`).
 
 * **Legacy Mode:** Text file logging (`oracle_journal.txt`) has been deprecated.
-* **Current Mode:** Every verdict is stored as a structured row in the `interactions` table, recording `user_name`, `verdict`, and `timestamp`.
+* **Current Mode:** Every verdict is stored as a structured row in the `interactions` table.
 
 ## 🧠 The Philosophy
 
@@ -84,7 +87,7 @@ It is not just a script; it is a digital accountability partner that never sleep
 
 ## 🚀 Future Roadmap
 
-* **Analytics Dashboard:** Build a Web Interface (FastAPI) to visualize craving frequency and punishment distribution over time.
+* **Advanced Data Visualization:** Upgrade the dashboard to render trend lines and heatmaps (using `Chart.js` or `Plotly`).
 * **Cloud Deployment:** Migrate the bot from local hosting to a 24/7 Virtual Private Server (VPS).
 * **Multi-User Support:** Scale the database schema to track progress for multiple users in a single server.
 * **AI Shaming:** Integrate a local LLM to generate unique, context-aware insults based on the user's failure rate.
@@ -92,3 +95,4 @@ It is not just a script; it is a digital accountability partner that never sleep
 ---
 
 *Built by [Kharonn00](https://github.com/Kharonn00). Powered by Python, Spite, and a 2027 Deadline.*
+
