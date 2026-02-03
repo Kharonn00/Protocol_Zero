@@ -1,50 +1,63 @@
 import random
 import datetime
+from database_manager import DatabaseManager  # <--- The New Neural Link
 
 class ProtocolZero:
     def __init__(self, user_name, target_date):
         self.user_name = user_name
         self.target_date = target_date
-        self.hand_is_broken = True  # The current physical handicap
-        self.log_file = "oracle_journal.txt" # New Logbook
-
-    def get_days_remaining(self):
-        today = datetime.date.today()
-        delta = self.target_date - today
-        return delta.days
-
-    def consult_oracle(self):
-        options = [
-            "Do 10 Pushups.",
-            "Write 10 lines of clean Python code.",
-            "Drink a glass of water and stare at a wall for 5 minutes.",
-            "Read one page of technical documentation."
-        ]
-
-        # Injury Adjustment
-        result = random.choice(options)
         
-        if "Pushups" in result and self.hand_is_broken:
+        # INJURY PROTOCOL (Hardcoded for now, until we make a setting for it)
+        self.hand_is_broken = True 
+        
+        # Initialize the Connection to the Warehouse
+        self.db = DatabaseManager() 
+
+    def calculate_time_remaining(self):
+        """Calculates days until the Singularity (Target Date)."""
+        today = datetime.date.today()
+        remaining = self.target_date - today
+        return remaining.days
+
+    def get_punishment(self):
+        """Stochastic punishment generator."""
+        punishments = [
+            "Do 10 Pushups",
+            "Do 20 Situps",
+            "Drink a glass of water",
+            "Take a 5-minute walk (No phone)",
+            "Write 10 lines of clean Python code",
+            "Do 10 Squats",
+            "Plank for 60 seconds"
+        ]
+        
+        # The Injury Override Logic
+        selection = random.choice(punishments)
+        
+        if self.hand_is_broken and "Pushups" in selection:
             return "Oracle redirected: Do 20 Squats instead (Hand Injury Protocol)."
         
-        # NEW: Record the verdict before returning it
-        self.log_interaction(result)
-        return result
+        return selection
 
-        # The Scribe
-    def log_interaction(self, verdict):
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        entry = f"[{timestamp}] User: {self.user_name} | Verdict: {verdict}\n"
+    def consult_oracle(self):
+        """The Main Public Method."""
+        days_left = self.calculate_time_remaining()
+        verdict = self.get_punishment()
+        
+        # THE UPGRADE: We no longer write to txt. We talk to Steve.
+        self.db.log_interaction(self.user_name, verdict)
+        
+        return (f"Days until Singularity: {days_left}\n"
+                f"Oracle Verdict: {verdict}")
 
-        # 'a' mode means APPEND. It adds to the end without erasing history.
-        with open(self.log_file, "a") as file:
-            file.write(entry)
-            print(f"[SYSTEM] Interaction recorded in {self.log_file}")
-
-# Initialize the Engine
-apocalypse = datetime.date(2027, 1, 1)
-engine = ProtocolZero("Ariel", apocalypse)
-
-print(f"--- PROTOCOL ZERO ACTIVATED ---")
-print(f"Days until Singularity: {engine.get_days_remaining()}")
-print(f"Oracle Verdict: {engine.consult_oracle()}")
+# TEST AREA (Local Execution)
+if __name__ == "__main__":
+    # Set the date for AGI (or your goal)
+    apocalypse = datetime.date(2027, 1, 1)
+    
+    # Initialize
+    engine = ProtocolZero("Ariel", apocalypse)
+    
+    # Run
+    print("--- PROTOCOL ZERO ACTIVATED ---")
+    print(engine.consult_oracle())
