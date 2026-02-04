@@ -47,7 +47,7 @@ To run the Discord Bot, you must configure your environment variables.
 ### Option A: Terminal Mode (Local)
 Run the engine directly in your command prompt:
 ```bash
-python vape_oracle.py
+python oracle.py
 
 ```
 
@@ -70,7 +70,8 @@ uvicorn api:app --reload
 ```
 
 * **View Dashboard:** Open `http://127.0.0.1:8000/dashboard`
-* **View Raw JSON:** Open `http://127.0.0.1:8000/stats`
+* **View Statistics (JSON):** Open `http://127.0.0.1:8000/stats`
+* **View Recent History (JSON):** Open `http://127.0.0.1:8000/history`
 
 ## 🗄️ The Archives (Data Persistence)
 
@@ -78,6 +79,7 @@ Protocol Zero now utilizes a **SQLite Backend** (`protocol_zero.db`).
 
 * **Legacy Mode:** Text file logging (`oracle_journal.txt`) has been deprecated.
 * **Current Mode:** Every verdict is stored as a structured row in the `interactions` table.
+* **Privacy Protocol:** The `.db` file is strictly **git-ignored** to prevent binary bloat and secure personal logs locally.
 
 ## 🧠 The Philosophy
 
@@ -95,4 +97,3 @@ It is not just a script; it is a digital accountability partner that never sleep
 ---
 
 *Built by [Kharonn00](https://github.com/Kharonn00). Powered by Python, Spite, and a 2027 Deadline.*
-
