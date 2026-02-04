@@ -56,6 +56,28 @@ class DatabaseManager:
         conn.close()
         return count
 
+    def get_recent_history(self, limit=5):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        # Select EVERYTHING from the 'interactions' shelf.
+        # Order them by ID (newest numbers first).
+        # Only give me the top 5.
+        cursor.execute("SELECT user_name, verdict, timestamp FROM interactions ORDER BY id DESC LIMIT ?", (limit,))
+
+        rows = cursor.fetchall() # Grab the data
+        conn.close()
+
+        # Convert the raw database rows into a nice list of dictionaries
+        history = []
+        for row in rows:
+            history.append({
+                "user": row[0],
+                "verdict": row[1],
+                "time": row[2]
+                })
+        return history
+
 # TEST AREA (Run this file directly to check if it works)
 if __name__ == "__main__":
     db = DatabaseManager()

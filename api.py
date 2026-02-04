@@ -14,6 +14,12 @@ def get_stats():
     count = db.get_total_count()
     return {"total_punishments_served": count}
 
+@app.get("/history")
+def get_history():
+    """Returns the last 5 punishments served."""
+    recent_logs = db.get_recent_history(limit=5)
+    return {"recent_punishments": recent_logs}
+
 # --- THE NEW DASHBOARD ---
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard():
