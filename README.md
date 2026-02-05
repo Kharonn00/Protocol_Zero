@@ -10,11 +10,14 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 ## ⚡ Features
 * **OOP Architecture:** Modular `ProtocolZero` class design for scalability and easy integration.
 * **Discord Bot Interface:** Remote access to the Oracle via a dedicated Discord bot. Users can summon judgment with `!oracle` from any server.
-* **Cyberpunk Web Dashboard:** A **FastAPI**-powered visual interface (`/dashboard`) that renders real-time punishment statistics in a dark-mode UI.
-* **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence. All interactions are atomically committed.
+* **Cyberpunk Command Center:** A **FastAPI**-powered dashboard featuring:
+    * **Real-time Statistics:** Live counter of total interventions.
+    * **Data Visualization:** A **Chart.js** Donut Chart showing punishment distribution.
+    * **Interactive Control:** A "SUMMON" button to trigger the Oracle directly from the browser.
+* **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
-* **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties (swaps Pushups for Squats).
-* **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027), providing existential urgency to every execution.
+* **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties.
+* **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027).
 
 ## 🛠️ Installation
 
@@ -60,24 +63,27 @@ python bot.py
 
 ```
 
-### Option C: Web Dashboard (Visual)
+### Option C: Web Command Center (Visual)
 
-Launch the FastAPI server to view your stats in the browser:
+Launch the FastAPI server to control the engine from your browser:
 
 ```bash
 uvicorn api:app --reload
 
 ```
 
-* **View Dashboard:** Open `http://127.0.0.1:8000/dashboard`
-* **View Statistics (JSON):** Open `http://127.0.0.1:8000/stats`
-* **View Recent History (JSON):** Open `http://127.0.0.1:8000/history`
+* **Dashboard:** Open `http://127.0.0.1:8000/dashboard`
+* *Click the Red **SUMMON ORACLE** Button to generate a verdict.*
+
+
+* **Raw Stats:** Open `http://127.0.0.1:8000/stats`
+* **Raw History:** Open `http://127.0.0.1:8000/history`
 
 ## 🗄️ The Archives (Data Persistence)
 
-Protocol Zero now utilizes a **SQLite Backend** (`protocol_zero.db`).
+Protocol Zero utilizes a **SQLite Backend** (`protocol_zero.db`).
 
-* **Legacy Mode:** Text file logging (`oracle_journal.txt`) has been deprecated.
+* **Legacy Mode:** Text file logging has been deprecated.
 * **Current Mode:** Every verdict is stored as a structured row in the `interactions` table.
 * **Privacy Protocol:** The `.db` file is strictly **git-ignored** to prevent binary bloat and secure personal logs locally.
 
@@ -85,11 +91,8 @@ Protocol Zero now utilizes a **SQLite Backend** (`protocol_zero.db`).
 
 This tool relies on the **"Friction Theory"** of habit breaking. By inserting a coding challenge or a physical exercise between the "Urge" and the "Action," Protocol Zero forces the brain to disengage from the craving loop.
 
-It is not just a script; it is a digital accountability partner that never sleeps and never negotiates.
-
 ## 🚀 Future Roadmap
 
-* **Advanced Data Visualization:** Upgrade the dashboard to render trend lines and heatmaps (using `Chart.js` or `Plotly`).
 * **Cloud Deployment:** Migrate the bot from local hosting to a 24/7 Virtual Private Server (VPS).
 * **Multi-User Support:** Scale the database schema to track progress for multiple users in a single server.
 * **AI Shaming:** Integrate a local LLM to generate unique, context-aware insults based on the user's failure rate.
