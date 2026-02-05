@@ -23,10 +23,22 @@ def get_history():
 # --- THE NEW DASHBOARD ---
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard():
-    # 1. Get the data
+    # 1. Get the Data
     count = db.get_total_count()
+    history = db.get_recent_history(limit=5)
     
-    # 2. The HTML Template (Dark Mode, Cyberpunk Style)
+    # 2. Build the History Rows (HTML Loop)
+    history_html = ""
+    for row in history:
+        history_html += f"""
+        <tr>
+            <td>{row['time']}</td>
+            <td>{row['user']}</td>
+            <td style="color: #ff3333;">{row['verdict']}</td>
+        </tr>
+        """
+
+    # 3. The HTML Template (With Table)
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -35,43 +47,51 @@ def dashboard():
         <style>
             body {{
                 background-color: #0d0d0d;
-                color: #00ff41; /* Hacker Green */
+                color: #00ff41;
                 font-family: 'Courier New', Courier, monospace;
                 display: flex;
-                justify-content: center;
+                flex-direction: column;
                 align-items: center;
+                justify-content: center;
                 height: 100vh;
                 margin: 0;
             }}
             .container {{
                 text-align: center;
                 border: 2px solid #00ff41;
-                padding: 50px;
+                padding: 40px;
                 box-shadow: 0 0 20px #00ff41;
+                width: 600px;
             }}
-            h1 {{
-                font-size: 24px;
-                text-transform: uppercase;
-                letter-spacing: 5px;
-                margin-bottom: 20px;
-            }}
-            .counter {{
-                font-size: 120px;
-                font-weight: bold;
-                text-shadow: 0 0 10px #00ff41;
-            }}
-            .footer {{
+            h1 {{ letter-spacing: 5px; margin-bottom: 10px; }}
+            .counter {{ font-size: 80px; font-weight: bold; text-shadow: 0 0 10px #00ff41; margin: 20px 0; }}
+            
+            table {{
+                width: 100%;
+                border-collapse: collapse;
                 margin-top: 20px;
                 font-size: 14px;
-                opacity: 0.7;
+                border-top: 1px solid #00ff41;
             }}
+            th, td {{ padding: 10px; text-align: left; border-bottom: 1px solid #333; }}
+            th {{ color: #fff; text-transform: uppercase; }}
+            tr:hover {{ background-color: #1a1a1a; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>Protocol Zero // Punishment Log</h1>
+            <h1>PROTOCOL ZERO</h1>
+            <div>TOTAL INTERVENTIONS</div>
             <div class="counter">{count}</div>
-            <div class="footer">INTERVENTIONS DEPLOYED</div>
+            
+            <table>
+                <tr>
+                    <th>Time</th>
+                    <th>Subject</th>
+                    <th>Verdict</th>
+                </tr>
+                {history_html}
+            </table>
         </div>
     </body>
     </html>
