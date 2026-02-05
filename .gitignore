@@ -7,3 +7,6 @@ oracle_journal.txt
 # Python Garbage (Compiled files we don't need)
 __pycache__/
 *.pyc
+
+# Database (Keep Local Only)
+*.db

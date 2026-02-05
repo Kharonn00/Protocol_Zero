@@ -78,6 +78,23 @@ class DatabaseManager:
                 })
         return history
 
+    def get_verdict_counts(self):
+        """Returns the count of each punishment type for the graph."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        # SQL MAGIC: Group by the verdict name and count them
+        cursor.execute("SELECT verdict, COUNT(*) FROM interactions GROUP BY verdict")
+        rows = cursor.fetchall()
+        conn.close()
+
+        # Transform into a dictionary
+        stats = {}
+        for row in rows:
+            stats[row[0]] = row[1]
+        return stats
+
+
 # TEST AREA (Run this file directly to check if it works)
 if __name__ == "__main__":
     db = DatabaseManager()
