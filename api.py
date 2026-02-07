@@ -38,12 +38,18 @@ def summon_oracle():
 # --- THE UPGRADED DASHBOARD ---
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard():
+    # 1. Fetch Data
     count = db.get_total_count()
     history = db.get_recent_history(limit=5)
     distribution = db.get_verdict_counts()
+    hourly_stats = db.get_hourly_activity() # <--- NEW DATA
     
-    labels = list(distribution.keys())
-    values = list(distribution.values())
+    # Data Prep for Charts
+    donut_labels = list(distribution.keys())
+    donut_values = list(distribution.values())
+    
+    # Hours 00 through 23 for the Bar Chart labels
+    bar_labels = [f"{i:02d}:00" for i in range(24)] 
     
     history_html = ""
     for row in history:
@@ -57,28 +63,18 @@ def dashboard():
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
             body {{ background-color: #0d0d0d; color: #00ff41; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }}
-            .container {{ text-align: center; border: 2px solid #00ff41; padding: 30px; width: 700px; background: #000; box-shadow: 0 0 20px #00ff41; }}
+            .container {{ text-align: center; border: 2px solid #00ff41; padding: 30px; width: 800px; background: #000; box-shadow: 0 0 20px #00ff41; }}
             .counter {{ font-size: 60px; font-weight: bold; margin: 10px 0; }}
-            .chart-container {{ position: relative; height: 200px; width: 100%; margin: 20px 0; display: flex; justify-content: center; }}
+            
+            /* Grid for 2 Charts */
+            .charts-wrapper {{ display: flex; justify-content: space-between; gap: 20px; margin: 20px 0; height: 250px; }}
+            .chart-box {{ width: 48%; position: relative; }}
+            
             table {{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; border-top: 1px solid #00ff41; }}
             th, td {{ padding: 8px; text-align: left; border-bottom: 1px solid #333; }}
             
-            /* THE RED BUTTON */
-            .btn-summon {{
-                background-color: #ff3333;
-                color: #000;
-                border: none;
-                padding: 15px 30px;
-                font-size: 18px;
-                font-weight: bold;
-                font-family: 'Courier New', monospace;
-                cursor: pointer;
-                margin-top: 20px;
-                box-shadow: 0 0 10px #ff3333;
-                transition: 0.2s;
-            }}
+            .btn-summon {{ background-color: #ff3333; color: #000; border: none; padding: 15px 30px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.2s; }}
             .btn-summon:hover {{ background-color: #ff0000; box-shadow: 0 0 20px #ff0000; transform: scale(1.05); }}
-            .btn-summon:active {{ transform: scale(0.95); }}
         </style>
     </head>
     <body>
@@ -88,7 +84,14 @@ def dashboard():
             
             <button class="btn-summon" onclick="summonOracle()">SUMMON ORACLE</button>
 
-            <div class="chart-container"><canvas id="painChart"></canvas></div>
+            <div class="charts-wrapper">
+                <div class="chart-box">
+                    <canvas id="donutChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
             
             <table>
                 <tr><th>Time</th><th>Subject</th><th>Verdict</th></tr>
@@ -97,29 +100,48 @@ def dashboard():
         </div>
 
         <script>
-            // 1. The Chart Logic
-            new Chart(document.getElementById('painChart'), {{
+            // 1. Donut Chart (Punishment Types)
+            new Chart(document.getElementById('donutChart'), {{
                 type: 'doughnut',
                 data: {{
-                    labels: {json.dumps(labels)}, 
-                    datasets: [{{ label: 'Punishments', data: {json.dumps(values)}, backgroundColor: ['#ff3333', '#00ff41', '#0088ff', '#ffaa00', '#aa00ff'], borderColor: '#0d0d0d', borderWidth: 2 }}]
+                    labels: {json.dumps(donut_labels)}, 
+                    datasets: [{{ 
+                        data: {json.dumps(donut_values)}, 
+                        backgroundColor: ['#ff3333', '#00ff41', '#0088ff', '#ffaa00', '#aa00ff'], 
+                        borderColor: '#0d0d0d', borderWidth: 2 
+                    }}]
                 }},
-                options: {{ plugins: {{ legend: {{ position: 'right', labels: {{ color: '#00ff41', font: {{ family: 'Courier New' }} }} }} }} }}
+                options: {{ plugins: {{ legend: {{ display: false }} }}, maintainAspectRatio: false }}
             }});
 
-            // 2. The Button Logic
+            // 2. Bar Chart (Hourly Weakness)
+            new Chart(document.getElementById('barChart'), {{
+                type: 'bar',
+                data: {{
+                    labels: {json.dumps(bar_labels)},
+                    datasets: [{{
+                        label: 'Failures by Hour',
+                        data: {json.dumps(hourly_stats)},
+                        backgroundColor: '#00ff41',
+                        borderColor: '#00ff41',
+                        borderWidth: 1
+                    }}]
+                }},
+                options: {{ 
+                    scales: {{ 
+                        x: {{ ticks: {{ color: '#00ff41' }}, grid: {{ color: '#333' }} }},
+                        y: {{ ticks: {{ color: '#00ff41' }}, grid: {{ color: '#333' }} }}
+                    }},
+                    plugins: {{ legend: {{ display: false }} }},
+                    maintainAspectRatio: false
+                }}
+            }});
+
+            // 3. Summon Logic
             async function summonOracle() {{
                 const btn = document.querySelector('.btn-summon');
                 btn.innerText = "CALCULATING...";
-                
-                // Call the API
-                const response = await fetch('/summon', {{ method: 'POST' }});
-                const data = await response.json();
-                
-                // Show Verdict
-                alert(data.verdict);
-                
-                // Reload page to see new stats
+                await fetch('/summon', {{ method: 'POST' }});
                 location.reload();
             }}
         </script>

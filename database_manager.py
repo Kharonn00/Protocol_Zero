@@ -94,6 +94,31 @@ class DatabaseManager:
             stats[row[0]] = row[1]
         return stats
 
+    def get_hourly_activity(self):
+        """Returns a list of 24 integers representing activity per hour of the day."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        # Extract the Hour ('%H') from the timestamp string and count groups
+        # Note: This assumes your timestamps are stored as 'YYYY-MM-DD HH:MM:SS'
+        query = "SELECT strftime('%H', timestamp), COUNT(*) FROM interactions GROUP BY 1"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
+        
+        # 1. Create a bucket for every hour (0 to 23) initialized to 0
+        hourly_data = {str(i).zfill(2): 0 for i in range(24)}
+        
+        # 2. Fill the buckets with actual data
+        for row in rows:
+            hour = row[0] # e.g., "14"
+            count = row[1]
+            if hour in hourly_data:
+                hourly_data[hour] = count
+                
+        # 3. Return just the values as a list [0, 0, ..., 5, 2, ...]
+        return list(hourly_data.values())
+
 
 # TEST AREA (Run this file directly to check if it works)
 if __name__ == "__main__":
