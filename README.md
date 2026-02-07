@@ -12,8 +12,8 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 * **Discord Bot Interface:** Remote access to the Oracle via a dedicated Discord bot. Users can summon judgment with `!oracle` from any server.
 * **Cyberpunk Command Center:** A **FastAPI**-powered dashboard featuring:
     * **Real-time Statistics:** Live counter of total interventions.
-    * **Data Visualization:** A **Chart.js** Donut Chart showing punishment distribution.
-    * **Interactive Control:** A "SUMMON" button to trigger the Oracle directly from the browser.
+    * **Temporal Analytics:** A Bar Chart heat-mapping your weakest hours.
+    * **The Mystic 8-Ball:** An interactive, animated orb that shakes to reveal your fate.
 * **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
 * **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties.
@@ -73,7 +73,7 @@ uvicorn api:app --reload
 ```
 
 * **Dashboard:** Open `http://127.0.0.1:8000/dashboard`
-* *Click the Red **SUMMON ORACLE** Button to generate a verdict.*
+* *Click the **Mystic 8-Ball** to summon the Oracle and generate a verdict.*
 
 
 * **Raw Stats:** Open `http://127.0.0.1:8000/stats`
