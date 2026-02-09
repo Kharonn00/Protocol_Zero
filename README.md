@@ -11,14 +11,14 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 * **OOP Architecture:** Modular `ProtocolZero` class design for scalability and easy integration.
 * **Discord Bot Interface:** Remote access to the Oracle via a dedicated Discord bot. Users can summon judgment with `!oracle` from any server.
 * **Cyberpunk Command Center:** A **FastAPI**-powered dashboard featuring:
-    * **Real-time Statistics:** Live counter of total interventions.
+    * **The Mystic 8-Ball:** An animated orb that shakes to reveal your fate.
+    * **The Voice of Judgment:** Browser-native **Text-to-Speech (TTS)** that reads your punishment aloud.
+    * **The Roast Protocol:** Randomly selects motivational insults to accompany your physical penance.
     * **Temporal Analytics:** A Bar Chart heat-mapping your weakest hours.
-    * **The Mystic 8-Ball:** An interactive, animated orb that shakes to reveal your fate.
 * **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
 * **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties.
 * **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027).
-
 ## 🛠️ Installation
 
 1.  **Clone the repository:**
