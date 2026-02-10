@@ -12,13 +12,15 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 * **Discord Bot Interface:** Remote access to the Oracle via a dedicated Discord bot. Users can summon judgment with `!oracle` from any server.
 * **Cyberpunk Command Center:** A **FastAPI**-powered dashboard featuring:
     * **The Mystic 8-Ball:** An animated orb that shakes to reveal your fate.
-    * **The Voice of Judgment:** Browser-native **Text-to-Speech (TTS)** that reads your punishment aloud.
-    * **The Roast Protocol:** Randomly selects motivational insults to accompany your physical penance.
+    * **Gemini AI Integration:** Connects to Google's LLM to generate unique, context-aware roasts for every failure.
+    * **The Voice of Judgment:** Browser-native **Text-to-Speech (TTS)** that reads the AI's insults aloud.
     * **Temporal Analytics:** A Bar Chart heat-mapping your weakest hours.
+    * **Mobile-Responsive UI:** Optimized with CRT scanline aesthetics for smartphone usage.
 * **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
 * **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties.
 * **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027).
+
 ## 🛠️ Installation
 
 1.  **Clone the repository:**
@@ -31,17 +33,18 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
     ```
 3.  **Install Dependencies:**
     ```bash
-    pip install discord.py python-dotenv fastapi uvicorn
+    pip install discord.py python-dotenv fastapi uvicorn google-generativeai
     ```
 
 ## ⚙️ Configuration (The Vault)
 
-To run the Discord Bot, you must configure your environment variables.
+To run the Bot and the AI, you must configure your environment variables.
 
 1.  Create a file named `.env` in the root directory.
-2.  Add your Discord Bot Token inside:
+2.  Add your Tokens inside:
     ```env
-    DISCORD_TOKEN=your_token_goes_here_no_quotes
+    DISCORD_TOKEN=your_discord_token_here
+    GEMINI_API_KEY=your_google_ai_key_here
     ```
     *(Note: The `.env` file is git-ignored to protect your secrets.)*
 
@@ -63,21 +66,21 @@ python bot.py
 
 ```
 
-### Option C: Web Command Center (Visual)
+### Option C: Web Command Center (Visual & Mobile)
 
-Launch the FastAPI server to control the engine from your browser:
+Launch the FastAPI server. To enable mobile access, we listen on all network interfaces:
 
 ```bash
-uvicorn api:app --reload
+uvicorn api:app --reload --host 0.0.0.0
 
 ```
 
-* **Dashboard:** Open `http://127.0.0.1:8000/dashboard`
-* *Click the **Mystic 8-Ball** to summon the Oracle and generate a verdict.*
+* **Desktop:** Open `http://127.0.0.1:8000/dashboard`
+* **Mobile:** Open `http://YOUR_PC_IP:8000/dashboard` (e.g., `192.168.1.5:8000`)
+* *Tap the **Mystic 8-Ball** to summon the Oracle.*
+* *Ensure your phone and PC are on the same Wi-Fi.*
 
 
-* **Raw Stats:** Open `http://127.0.0.1:8000/stats`
-* **Raw History:** Open `http://127.0.0.1:8000/history`
 
 ## 🗄️ The Archives (Data Persistence)
 
@@ -95,7 +98,6 @@ This tool relies on the **"Friction Theory"** of habit breaking. By inserting a 
 
 * **Cloud Deployment:** Migrate the bot from local hosting to a 24/7 Virtual Private Server (VPS).
 * **Multi-User Support:** Scale the database schema to track progress for multiple users in a single server.
-* **AI Shaming:** Integrate a local LLM to generate unique, context-aware insults based on the user's failure rate.
 
 ---
 

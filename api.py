@@ -1,26 +1,36 @@
+import os
+import datetime
+import random
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from dotenv import load_dotenv
+from google import genai  # <--- NEW IMPORT
+from vape_oracle import ProtocolZero
 from database_manager import DatabaseManager
-import json
-import datetime
-from oracle import ProtocolZero
-import random
 
-# --- THE INSULT LIBRARY ---
-ROASTS = [
-    "Do it, or remain weak forever.",
-    "Your ancestors are watching, and they are disappointed.",
-    "Pain is just weakness leaving the body.",
-    "I bet you can't even finish this set.",
-    "You promised yourself you would be better.",
-    "Ariel, focus. Do not fail me.",
-    "If you quit now, you have learned nothing.",
-    "Execute the protocol, human.",
-    "Suffering is the currency of growth. Pay up."
-]
+# 1. Load Secrets
+load_dotenv()
+GOOGLE_KEY = os.getenv("GEMINI_API_KEY")
+
+# 2. Configure AI (The New Way)
+client = None
+if GOOGLE_KEY:
+    try:
+        client = genai.Client(api_key=GOOGLE_KEY)
+    except Exception as e:
+        print(f"AI Config Error: {e}")
+else:
+    print("WARNING: No Gemini Key found. Using backup roasts.")
 
 app = FastAPI()
 db = DatabaseManager()
+
+# Backup list in case the AI is sleeping
+BACKUP_ROASTS = [
+    "The AI is offline, but you are still weak.",
+    "Even the servers are disappointed in you.",
+    "Just do the reps, human."
+]
 
 @app.get("/")
 def read_root():
@@ -34,24 +44,36 @@ def get_stats():
 def get_history():
     return {"recent_punishments": db.get_recent_history(limit=5)}
 
-# --- THE NEW TRIGGER ---
 @app.post("/summon")
 def summon_oracle():
-    """Calculates a punishment, logs it, and adds a roast."""
-    # 1. Initialize Engine
+    """Calculates a punishment and asks AI to roast the user."""
+    # 1. Logic
     apocalypse = datetime.date(2027, 1, 1)
     engine = ProtocolZero("Ariel_Web", apocalypse)
-    
-    # 2. Get Verdict
     verdict = engine.consult_oracle()
     
-    # 3. Pick a Roast
-    insult = random.choice(ROASTS)
+    # 2. AI Generation
+    roast = ""
+    if client:
+        try:
+            # The Prompt: Cruelty is the goal
+            prompt = f"You are a ruthless, cynical AI drill sergeant from a cyberpunk future. The user just failed a willpower check and was sentenced to: '{verdict}'. Write a brutal, one-sentence roast to motivate them. Do not be polite."
+            
+            # THE NEW SYNTAX
+            response = client.models.generate_content(
+                model='gemini-2.0-flash', 
+                contents=prompt
+            )
+            roast = response.text.strip()
+        except Exception as e:
+            print(f"AI Failure: {e}")
+            roast = random.choice(BACKUP_ROASTS)
+    else:
+        roast = random.choice(BACKUP_ROASTS)
     
-    # 4. Return both
-    return {"verdict": verdict, "roast": insult}
+    return {"verdict": verdict, "roast": roast}
 
-# --- THE UPGRADED DASHBOARD ---
+# UPGRADED DASHBOARD
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard():
     count = db.get_total_count()
