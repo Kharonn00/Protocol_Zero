@@ -71,36 +71,89 @@ def dashboard():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Protocol Zero // Oracle</title>
+        <title>Protocol Zero // Pocket</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
-            body {{ background-color: #0d0d0d; color: #00ff41; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }}
-            .container {{ text-align: center; border: 2px solid #00ff41; padding: 30px; width: 800px; background: #000; box-shadow: 0 0 20px #00ff41; }}
-            .counter {{ font-size: 60px; font-weight: bold; margin: 10px 0; }}
+            body {{ 
+                background-color: #050505; 
+                color: #00ff41; 
+                font-family: 'Courier New', monospace; 
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                padding: 10px; 
+                margin: 0;
+                overflow-x: hidden; /* Prevent scrollbar from scanlines */
+            }}
+
+            /* --- THE CRT EFFECT --- */
+            .scanlines {{
+                position: fixed;
+                top: 0; left: 0; width: 100%; height: 100%;
+                background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+                background-size: 100% 4px;
+                pointer-events: none; /* Let clicks pass through */
+                z-index: 999;
+                opacity: 0.6;
+            }}
             
-            /* ORB & ANIMATIONS */
+            .container {{ 
+                text-align: center; 
+                border: 1px solid #00ff41; 
+                padding: 20px; 
+                width: 100%; 
+                max-width: 800px; /* Responsive Cap */
+                background: #000; 
+                box-shadow: 0 0 15px #00ff41; 
+                box-sizing: border-box; /* Padding doesn't break width */
+            }}
+            
+            h1 {{ font-size: 2rem; margin: 10px 0; letter-spacing: 2px; }}
+            .counter {{ font-size: 4rem; font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px #00ff41; }}
+            
+            /* ORB */
             .ball-container {{ display: flex; justify-content: center; margin-top: 20px; perspective: 1000px; }}
-            .magic-8-ball {{ width: 150px; height: 150px; background: radial-gradient(circle at 30% 30%, #444, #000); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: transform 0.1s; }}
-            .face-8 {{ font-size: 80px; font-family: sans-serif; color: black; background: white; border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }}
+            .magic-8-ball {{ width: 140px; height: 140px; background: radial-gradient(circle at 30% 30%, #444, #000); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.8); transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }}
+            .face-8 {{ font-size: 60px; font-family: sans-serif; color: black; background: white; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; }}
             
+            /* ANIMATIONS */
             @keyframes shake {{ 0% {{ transform: translate(1px, 1px) rotate(0deg); }} 10% {{ transform: translate(-1px, -2px) rotate(-1deg); }} 20% {{ transform: translate(-3px, 0px) rotate(1deg); }} 30% {{ transform: translate(3px, 2px) rotate(0deg); }} 40% {{ transform: translate(1px, -1px) rotate(1deg); }} 50% {{ transform: translate(-1px, 2px) rotate(-1deg); }} 60% {{ transform: translate(-3px, 1px) rotate(0deg); }} 70% {{ transform: translate(3px, 1px) rotate(-1deg); }} 80% {{ transform: translate(-1px, -1px) rotate(1deg); }} 90% {{ transform: translate(1px, 2px) rotate(0deg); }} 100% {{ transform: translate(1px, -2px) rotate(-1deg); }} }}
             .shaking {{ animation: shake 0.5s; animation-iteration-count: infinite; }}
 
             /* VERDICT BOX */
-            #verdict-box {{ margin-top: 30px; margin-bottom: 20px; padding: 20px; border: 2px dashed #ff3333; background-color: #1a0505; color: #ff3333; font-size: 24px; font-weight: bold; text-transform: uppercase; display: none; box-shadow: 0 0 15px #ff3333; animation: flicker 1.5s infinite alternate; }}
-            .roast-text {{ display: block; margin-top: 10px; font-size: 14px; color: #fff; font-style: italic; opacity: 0.8; text-transform: none; }}
-            
+            #verdict-box {{ margin: 20px 0; padding: 15px; border: 2px dashed #ff3333; background-color: #1a0505; color: #ff3333; font-size: 1.5rem; font-weight: bold; text-transform: uppercase; display: none; animation: flicker 1.5s infinite alternate; }}
+            .roast-text {{ display: block; margin-top: 10px; font-size: 1rem; color: #fff; font-style: italic; opacity: 0.8; text-transform: none; }}
             @keyframes flicker {{ 0% {{ opacity: 0.8; box-shadow: 0 0 10px #ff3333; }} 100% {{ opacity: 1; box-shadow: 0 0 25px #ff3333; }} }}
 
-            /* LAYOUT */
-            .charts-wrapper {{ display: flex; justify-content: space-between; gap: 20px; margin: 20px 0; height: 250px; }}
-            .chart-box {{ width: 48%; position: relative; }}
+            /* RESPONSIVE CHARTS */
+            .charts-wrapper {{ 
+                display: flex; 
+                flex-wrap: wrap; /* Allow stacking */
+                justify-content: space-between; 
+                gap: 20px; 
+                margin: 20px 0; 
+            }}
+            .chart-box {{ 
+                width: 48%; 
+                height: 250px; 
+                position: relative; 
+            }}
+            
+            /* MOBILE OVERRIDE */
+            @media (max-width: 600px) {{
+                .chart-box {{ width: 100%; height: 200px; }} /* Stack full width on phone */
+                h1 {{ font-size: 1.5rem; }}
+                .counter {{ font-size: 3rem; }}
+                table {{ font-size: 10px; }}
+            }}
+
             table {{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; border-top: 1px solid #00ff41; }}
             th, td {{ padding: 8px; text-align: left; border-bottom: 1px solid #333; }}
         </style>
     </head>
     <body>
-        <div class="container">
+        <div class="scanlines"></div> <div class="container">
             <h1>PROTOCOL ZERO</h1>
             <div class="counter">{count}</div>
             
@@ -127,16 +180,12 @@ def dashboard():
         </div>
 
         <script>
-            // --- THE VOICE OF GOD ---
+            // --- THE VOICE ---
             function speak(text) {{
-                // Stop any previous speech
                 window.speechSynthesis.cancel();
-                
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.pitch = 0.8; // Lower pitch = more ominous
-                utterance.rate = 0.9;  // Slower rate = more serious
-                utterance.volume = 1.0;
-                
+                utterance.pitch = 0.8; 
+                utterance.rate = 0.9;
                 window.speechSynthesis.speak(utterance);
             }}
 
@@ -149,24 +198,16 @@ def dashboard():
                 box.style.display = 'none';
                 ball.classList.add('shaking');
                 
-                // Call API
                 const response = await fetch('/summon', {{ method: 'POST' }});
                 const data = await response.json();
                 
                 setTimeout(() => {{
                     ball.classList.remove('shaking');
-                    
-                    // Show Text
                     vText.innerText = data.verdict;
                     rText.innerText = '"' + data.roast + '"';
                     box.style.display = 'block';
-                    
-                    // SPEAK THE VERDICT
                     speak(data.verdict + ". " + data.roast);
-                    
-                    // Reload after 6 seconds (give time to listen)
                     setTimeout(() => {{ location.reload(); }}, 6000);
-                    
                 }}, 1000);
             }}
 
