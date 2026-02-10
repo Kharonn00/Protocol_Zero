@@ -1,18 +1,19 @@
 import os
 import datetime
 import random
+import json
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
-from google import genai  # <--- NEW IMPORT
-from vape_oracle import ProtocolZero
+from google import genai
+from oracle import ProtocolZero
 from database_manager import DatabaseManager
 
 # 1. Load Secrets
 load_dotenv()
 GOOGLE_KEY = os.getenv("GEMINI_API_KEY")
 
-# 2. Configure AI (The New Way)
+# 2. Configure AI
 client = None
 if GOOGLE_KEY:
     try:
@@ -25,7 +26,7 @@ else:
 app = FastAPI()
 db = DatabaseManager()
 
-# Backup list in case the AI is sleeping
+# Backup roasts
 BACKUP_ROASTS = [
     "The AI is offline, but you are still weak.",
     "Even the servers are disappointed in you.",
@@ -56,12 +57,9 @@ def summon_oracle():
     roast = ""
     if client:
         try:
-            # The Prompt: Cruelty is the goal
             prompt = f"You are a ruthless, cynical AI drill sergeant from a cyberpunk future. The user just failed a willpower check and was sentenced to: '{verdict}'. Write a brutal, one-sentence roast to motivate them. Do not be polite."
-            
-            # THE NEW SYNTAX
             response = client.models.generate_content(
-                model='gemini-2.0-flash', 
+                model='gemini-2.5-flash-lite', 
                 contents=prompt
             )
             roast = response.text.strip()
@@ -73,7 +71,6 @@ def summon_oracle():
     
     return {"verdict": verdict, "roast": roast}
 
-# UPGRADED DASHBOARD
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard():
     count = db.get_total_count()
@@ -106,65 +103,46 @@ def dashboard():
                 align-items: center; 
                 padding: 10px; 
                 margin: 0;
-                overflow-x: hidden; /* Prevent scrollbar from scanlines */
+                overflow-x: hidden; 
             }}
-
-            /* --- THE CRT EFFECT --- */
             .scanlines {{
                 position: fixed;
                 top: 0; left: 0; width: 100%; height: 100%;
                 background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
                 background-size: 100% 4px;
-                pointer-events: none; /* Let clicks pass through */
+                pointer-events: none; 
                 z-index: 999;
                 opacity: 0.6;
             }}
-            
             .container {{ 
                 text-align: center; 
                 border: 1px solid #00ff41; 
                 padding: 20px; 
                 width: 100%; 
-                max-width: 800px; /* Responsive Cap */
+                max-width: 800px; 
                 background: #000; 
                 box-shadow: 0 0 15px #00ff41; 
-                box-sizing: border-box; /* Padding doesn't break width */
+                box-sizing: border-box; 
             }}
-            
             h1 {{ font-size: 2rem; margin: 10px 0; letter-spacing: 2px; }}
             .counter {{ font-size: 4rem; font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px #00ff41; }}
             
-            /* ORB */
             .ball-container {{ display: flex; justify-content: center; margin-top: 20px; perspective: 1000px; }}
             .magic-8-ball {{ width: 140px; height: 140px; background: radial-gradient(circle at 30% 30%, #444, #000); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.8); transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }}
             .face-8 {{ font-size: 60px; font-family: sans-serif; color: black; background: white; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; }}
             
-            /* ANIMATIONS */
             @keyframes shake {{ 0% {{ transform: translate(1px, 1px) rotate(0deg); }} 10% {{ transform: translate(-1px, -2px) rotate(-1deg); }} 20% {{ transform: translate(-3px, 0px) rotate(1deg); }} 30% {{ transform: translate(3px, 2px) rotate(0deg); }} 40% {{ transform: translate(1px, -1px) rotate(1deg); }} 50% {{ transform: translate(-1px, 2px) rotate(-1deg); }} 60% {{ transform: translate(-3px, 1px) rotate(0deg); }} 70% {{ transform: translate(3px, 1px) rotate(-1deg); }} 80% {{ transform: translate(-1px, -1px) rotate(1deg); }} 90% {{ transform: translate(1px, 2px) rotate(0deg); }} 100% {{ transform: translate(1px, -2px) rotate(-1deg); }} }}
             .shaking {{ animation: shake 0.5s; animation-iteration-count: infinite; }}
 
-            /* VERDICT BOX */
             #verdict-box {{ margin: 20px 0; padding: 15px; border: 2px dashed #ff3333; background-color: #1a0505; color: #ff3333; font-size: 1.5rem; font-weight: bold; text-transform: uppercase; display: none; animation: flicker 1.5s infinite alternate; }}
             .roast-text {{ display: block; margin-top: 10px; font-size: 1rem; color: #fff; font-style: italic; opacity: 0.8; text-transform: none; }}
             @keyframes flicker {{ 0% {{ opacity: 0.8; box-shadow: 0 0 10px #ff3333; }} 100% {{ opacity: 1; box-shadow: 0 0 25px #ff3333; }} }}
 
-            /* RESPONSIVE CHARTS */
-            .charts-wrapper {{ 
-                display: flex; 
-                flex-wrap: wrap; /* Allow stacking */
-                justify-content: space-between; 
-                gap: 20px; 
-                margin: 20px 0; 
-            }}
-            .chart-box {{ 
-                width: 48%; 
-                height: 250px; 
-                position: relative; 
-            }}
+            .charts-wrapper {{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin: 20px 0; }}
+            .chart-box {{ width: 48%; height: 250px; position: relative; }}
             
-            /* MOBILE OVERRIDE */
             @media (max-width: 600px) {{
-                .chart-box {{ width: 100%; height: 200px; }} /* Stack full width on phone */
+                .chart-box {{ width: 100%; height: 200px; }}
                 h1 {{ font-size: 1.5rem; }}
                 .counter {{ font-size: 3rem; }}
                 table {{ font-size: 10px; }}
@@ -175,7 +153,8 @@ def dashboard():
         </style>
     </head>
     <body>
-        <div class="scanlines"></div> <div class="container">
+        <div class="scanlines"></div>
+        <div class="container">
             <h1>PROTOCOL ZERO</h1>
             <div class="counter">{count}</div>
             
@@ -202,7 +181,6 @@ def dashboard():
         </div>
 
         <script>
-            // --- THE VOICE ---
             function speak(text) {{
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
@@ -233,7 +211,6 @@ def dashboard():
                 }}, 1000);
             }}
 
-            // Charts
             new Chart(document.getElementById('donutChart'), {{
                 type: 'doughnut',
                 data: {{ labels: {json.dumps(donut_labels)}, datasets: [{{ data: {json.dumps(donut_values)}, backgroundColor: ['#ff3333', '#00ff41', '#0088ff', '#ffaa00', '#aa00ff'], borderColor: '#0d0d0d', borderWidth: 2 }}] }},
