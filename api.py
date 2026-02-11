@@ -2,6 +2,8 @@ import os
 import datetime
 import random
 import json
+import asyncio
+from bot import client as discord_bot
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
@@ -26,6 +28,19 @@ else:
 app = FastAPI()
 db = DatabaseManager()
 
+@app.on_event("startup")
+async def start_discord_bot():
+    """
+    Summons the Discord Bot in the background when the API starts.
+    """
+    discord_token = os.getenv("DISCORD_TOKEN")
+    if discord_token:
+        print("🤖 Oracle is connecting to Discord...")
+        # create_task lets it run without blocking the website
+        asyncio.create_task(discord_bot.start(discord_token))
+    else:
+        print("⚠️ Warning: No DISCORD_TOKEN found. Bot will not sleep.")
+
 # Backup roasts
 BACKUP_ROASTS = [
     "The AI is offline, but you are still weak.",
@@ -35,7 +50,7 @@ BACKUP_ROASTS = [
 
 @app.get("/")
 def read_root():
-    return {"status": "Protocol Zero API is Online", "god": "Loki"}
+    return {"status": "Protocol Zero API is Online"}
 
 @app.get("/stats")
 def get_stats():
