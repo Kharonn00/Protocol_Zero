@@ -39,4 +39,9 @@ async def on_message(message):
 		await message.channel.send(f"**The Oracle Speaks:**\n{verdict}")
 
 # 4. IGNITION
-client.run(TOKEN)
+# This check prevents the bot from auto-starting when imported by api.py
+if __name__ == "__main__":
+    if TOKEN:
+        client.run(TOKEN)
+    else:
+        print("❌ CRITICAL: No DISCORD_TOKEN found in .env")
