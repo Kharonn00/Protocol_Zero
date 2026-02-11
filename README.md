@@ -1,9 +1,11 @@
 # Protocol Zero: Stochastic Behavioral Modification Engine
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=render&logoColor=white)](https://protocol-zero.onrender.com/dashboard)
+
 > *"Chaos is the only cure for habit."*
 
 ## 📜 Overview
-**Protocol Zero** is a Python-based utility designed to disrupt dopamine-driven feedback loops (specifically nicotine dependency) via stochastic intervention.
+**Protocol Zero** is a Python-based utility designed to disrupt dopamine-driven feedback loops (specifically nicotine/THC dependency) via stochastic intervention.
 
 Built with an **Object-Oriented Architecture**, this engine treats "Willpower" not as a feeling, but as a computable class. It outsources executive decision-making to a pseudo-random number generator, introducing friction and gamified penalties to break the "Trigger-Action-Reward" cycle.
 
@@ -33,12 +35,12 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
     ```
 3.  **Install Dependencies:**
     ```bash
-    pip install discord.py python-dotenv fastapi uvicorn google-generativeai
+    pip install -r requirements.txt
     ```
 
 ## ⚙️ Configuration (The Vault)
 
-To run the Bot and the AI, you must configure your environment variables.
+To run the Bot and the AI locally, you must configure your environment variables.
 
 1.  Create a file named `.env` in the root directory.
 2.  Add your Tokens inside:
@@ -50,25 +52,12 @@ To run the Bot and the AI, you must configure your environment variables.
 
 ## 🎮 Usage
 
-### Option A: Terminal Mode (Local)
-Run the engine directly in your command prompt:
-```bash
-python oracle.py
+### Option A: The Cloud (Global Access)
+The Oracle is live and watching from the cloud. Access the dashboard from any device:
+🔗 **[Launch Protocol Zero](https://protocol-zero.onrender.com/dashboard)**
 
-```
-
-### Option B: Discord Bot Mode (Remote)
-
-Bring the bot online to listen for commands in your server:
-
-```bash
-python bot.py
-
-```
-
-### Option C: Web Command Center (Visual & Mobile)
-
-Launch the FastAPI server. To enable mobile access, we listen on all network interfaces:
+### Option B: Web Command Center (Local)
+Launch the FastAPI server on your own machine.
 
 ```bash
 uvicorn api:app --reload --host 0.0.0.0
@@ -82,12 +71,30 @@ uvicorn api:app --reload --host 0.0.0.0
 
 
 
+### Option C: Discord Bot Mode (Remote)
+
+Bring the bot online to listen for commands in your server:
+
+```bash
+python bot.py
+
+```
+
+### Option D: Terminal Mode (Legacy)
+
+Run the engine directly in your command prompt:
+
+```bash
+python oracle.py
+
+```
+
 ## 🗄️ The Archives (Data Persistence)
 
 Protocol Zero utilizes a **SQLite Backend** (`protocol_zero.db`).
 
-* **Legacy Mode:** Text file logging has been deprecated.
-* **Current Mode:** Every verdict is stored as a structured row in the `interactions` table.
+* **Cloud Note:** On free cloud tiers (like Render), the database is ephemeral and will reset upon redeployment.
+* **Local Mode:** Every verdict is stored permanently in the `interactions` table.
 * **Privacy Protocol:** The `.db` file is strictly **git-ignored** to prevent binary bloat and secure personal logs locally.
 
 ## 🧠 The Philosophy
@@ -96,7 +103,7 @@ This tool relies on the **"Friction Theory"** of habit breaking. By inserting a 
 
 ## 🚀 Future Roadmap
 
-* **Cloud Deployment:** Migrate the bot from local hosting to a 24/7 Virtual Private Server (VPS).
+* **PostgreSQL Integration:** Migrate from SQLite to a cloud-native database for permanent storage on Render.
 * **Multi-User Support:** Scale the database schema to track progress for multiple users in a single server.
 
 ---
