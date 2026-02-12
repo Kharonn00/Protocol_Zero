@@ -1,6 +1,7 @@
 # Protocol Zero: Stochastic Behavioral Modification Engine
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=render&logoColor=white)](https://protocol-zero.onrender.com/dashboard)
+[![Storage](https://img.shields.io/badge/Storage-PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
 
 > *"Chaos is the only cure for habit."*
 
@@ -10,17 +11,19 @@
 Built with an **Object-Oriented Architecture**, this engine treats "Willpower" not as a feeling, but as a computable class. It outsources executive decision-making to a pseudo-random number generator, introducing friction and gamified penalties to break the "Trigger-Action-Reward" cycle.
 
 ## ⚡ Features
-* **OOP Architecture:** Modular `ProtocolZero` class design for scalability and easy integration.
-* **Discord Bot Interface:** Remote access to the Oracle via a dedicated Discord bot. Users can summon judgment with `!oracle` from any server.
+* **Hybrid Cloud Architecture:**
+    * **Local:** Runs on lightweight **SQLite**.
+    * **Cloud:** Automatically switches to **PostgreSQL (Neon)** for immortal data persistence.
+* **Unified Process Management:** The **FastAPI** server and **Discord Bot** are fused into a single asynchronous event loop, allowing both to run 24/7 on a single free cloud instance.
+* **Discord Bot Interface:**
+    * Remote access via `!oracle`.
+    * **AI-Powered Roasts:** The bot now connects to Gemini to generate context-aware insults along with your punishment.
 * **Cyberpunk Command Center:** A **FastAPI**-powered dashboard featuring:
     * **The Mystic 8-Ball:** An animated orb that shakes to reveal your fate.
-    * **Gemini AI Integration:** Connects to Google's LLM to generate unique, context-aware roasts for every failure.
     * **The Voice of Judgment:** Browser-native **Text-to-Speech (TTS)** that reads the AI's insults aloud.
     * **Temporal Analytics:** A Bar Chart heat-mapping your weakest hours.
-    * **Mobile-Responsive UI:** Optimized with CRT scanline aesthetics for smartphone usage.
-* **Enterprise-Grade Storage:** Implements a **SQLite Database** (`protocol_zero.db`) for robust data persistence.
+    * **Mobile-Responsive UI:** Optimized with CRT scanline aesthetics.
 * **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
-* **Adaptive Injury Protocol:** Dynamically detects physical handicaps (e.g., `hand_is_broken = True`) and reroutes physical penalties.
 * **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027).
 
 ## 🛠️ Installation
@@ -40,49 +43,38 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 
 ## ⚙️ Configuration (The Vault)
 
-To run the Bot and the AI locally, you must configure your environment variables.
+To run the full stack locally, configure your `.env` file.
 
 1.  Create a file named `.env` in the root directory.
 2.  Add your Tokens inside:
     ```env
     DISCORD_TOKEN=your_discord_token_here
     GEMINI_API_KEY=your_google_ai_key_here
+    # Optional: Add DATABASE_URL if connecting to Cloud DB locally
+    # DATABASE_URL=postgresql://...
     ```
-    *(Note: The `.env` file is git-ignored to protect your secrets.)*
 
 ## 🎮 Usage
 
 ### Option A: The Cloud (Global Access)
-The Oracle is live and watching from the cloud. Access the dashboard from any device:
-🔗 **[Launch Protocol Zero](https://protocol-zero.onrender.com/dashboard)**
+The Oracle and the Discord Bot are live and fused.
+* **Dashboard:** [Launch Protocol Zero](https://protocol-zero.onrender.com/dashboard)
+* **Discord:** Type `!oracle` in your server. The bot never sleeps.
 
-### Option B: Web Command Center (Local)
-Launch the FastAPI server on your own machine.
+### Option B: Local Development
+Launch the stack on your machine. This will start both the Website and the Bot.
 
 ```bash
-uvicorn api:app --reload --host 0.0.0.0
+uvicorn api:app --reload
 
 ```
 
-* **Desktop:** Open `http://127.0.0.1:8000/dashboard`
-* **Mobile:** Open `http://YOUR_PC_IP:8000/dashboard` (e.g., `192.168.1.5:8000`)
-* *Tap the **Mystic 8-Ball** to summon the Oracle.*
-* *Ensure your phone and PC are on the same Wi-Fi.*
+* **Dashboard:** `http://127.0.0.1:8000/dashboard`
+* **Note:** The database will default to `protocol_zero.db` (SQLite) unless a `DATABASE_URL` is present.
 
+### Option C: The Scout (Legacy)
 
-
-### Option C: Discord Bot Mode (Remote)
-
-Bring the bot online to listen for commands in your server:
-
-```bash
-python bot.py
-
-```
-
-### Option D: Terminal Mode (Legacy)
-
-Run the engine directly in your command prompt:
+Run the engine directly in the terminal for a quick check:
 
 ```bash
 python oracle.py
@@ -91,11 +83,11 @@ python oracle.py
 
 ## 🗄️ The Archives (Data Persistence)
 
-Protocol Zero utilizes a **SQLite Backend** (`protocol_zero.db`).
+Protocol Zero utilizes a **Bilingual Database Manager**:
 
-* **Cloud Note:** On free cloud tiers (like Render), the database is ephemeral and will reset upon redeployment.
-* **Local Mode:** Every verdict is stored permanently in the `interactions` table.
-* **Privacy Protocol:** The `.db` file is strictly **git-ignored** to prevent binary bloat and secure personal logs locally.
+* **Cloud Mode (Render):** Detects `DATABASE_URL` and connects to **Neon PostgreSQL**. Data survives redeployments.
+* **Local Mode (Laptop):** Defaults to **SQLite** (`protocol_zero.db`) for easy testing without internet.
+* **Privacy Protocol:** The `.db` file is strictly **git-ignored**.
 
 ## 🧠 The Philosophy
 
@@ -103,8 +95,8 @@ This tool relies on the **"Friction Theory"** of habit breaking. By inserting a 
 
 ## 🚀 Future Roadmap
 
-* **PostgreSQL Integration:** Migrate from SQLite to a cloud-native database for permanent storage on Render.
 * **Multi-User Support:** Scale the database schema to track progress for multiple users in a single server.
+* **Gamification 2.0:** Add XP, Levels, and "Streaks" to the database.
 
 ---
 
