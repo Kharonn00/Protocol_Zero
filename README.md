@@ -2,6 +2,7 @@
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=render&logoColor=white)](https://protocol-zero.onrender.com/dashboard)
 [![Storage](https://img.shields.io/badge/Storage-PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
+[![System](https://img.shields.io/badge/System-RPG_Mode-purple?style=for-the-badge)](https://discord.com)
 
 > *"Chaos is the only cure for habit."*
 
@@ -14,17 +15,18 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 * **Hybrid Cloud Architecture:**
     * **Local:** Runs on lightweight **SQLite**.
     * **Cloud:** Automatically switches to **PostgreSQL (Neon)** for immortal data persistence.
-* **Unified Process Management:** The **FastAPI** server and **Discord Bot** are fused into a single asynchronous event loop, allowing both to run 24/7 on a single free cloud instance.
+* **Unified Process Management:** The **FastAPI** server and **Discord Bot** are fused into a single asynchronous event loop.
+* **RPG Progression System (NEW):**
+    * **XP & Leveling:** Gain XP for honesty (`!oracle`) and massive XP for resistance (`!resist`).
+    * **Streak Tracking:** The engine tracks your consecutive victories. One failure resets the counter to zero.
+    * **Multi-User Support:** Database tracks stats individually for every user in the server.
 * **Discord Bot Interface:**
-    * Remote access via `!oracle`.
-    * **AI-Powered Roasts:** The bot now connects to Gemini to generate context-aware insults along with your punishment.
+    * **AI-Powered Roasts:** Connects to **Google Gemini** to generate context-aware insults or grudging praise.
+    * **Stochastic Judgement:** Randomly assigns physical or mental tasks to derail cravings.
 * **Cyberpunk Command Center:** A **FastAPI**-powered dashboard featuring:
     * **The Mystic 8-Ball:** An animated orb that shakes to reveal your fate.
-    * **The Voice of Judgment:** Browser-native **Text-to-Speech (TTS)** that reads the AI's insults aloud.
-    * **Temporal Analytics:** A Bar Chart heat-mapping your weakest hours.
-    * **Mobile-Responsive UI:** Optimized with CRT scanline aesthetics.
-* **Stochastic Decision Logic:** Randomly assigns tasks (physical or mental) to derail cravings.
-* **The Singularity Timer:** Calculates the precise `timedelta` remaining until the estimated arrival of AGI (2027).
+    * **The Voice of Judgment:** Browser-native **Text-to-Speech (TTS)**.
+    * **Temporal Analytics:** Heat-mapping your weakest hours.
 
 ## 🛠️ Installation
 
@@ -59,10 +61,13 @@ To run the full stack locally, configure your `.env` file.
 ### Option A: The Cloud (Global Access)
 The Oracle and the Discord Bot are live and fused.
 * **Dashboard:** [Launch Protocol Zero](https://protocol-zero.onrender.com/dashboard)
-* **Discord:** Type `!oracle` in your server. The bot never sleeps.
+* **Discord Commands:**
+    * `!oracle` -> **Failure.** You felt the urge and gave in. The bot assigns a punishment, resets your streak, and awards pity XP.
+    * `!resist` -> **Victory.** You felt the urge but said NO. The bot praises you, increments your streak, and awards massive XP.
+    * `!stats` -> **Status.** Displays your current Level, Total XP, and Active Streak.
 
 ### Option B: Local Development
-Launch the stack on your machine. This will start both the Website and the Bot.
+Launch the stack on your machine.
 
 ```bash
 uvicorn api:app --reload
@@ -70,24 +75,13 @@ uvicorn api:app --reload
 ```
 
 * **Dashboard:** `http://127.0.0.1:8000/dashboard`
-* **Note:** The database will default to `protocol_zero.db` (SQLite) unless a `DATABASE_URL` is present.
-
-### Option C: The Scout (Legacy)
-
-Run the engine directly in the terminal for a quick check:
-
-```bash
-python oracle.py
-
-```
 
 ## 🗄️ The Archives (Data Persistence)
 
 Protocol Zero utilizes a **Bilingual Database Manager**:
 
-* **Cloud Mode (Render):** Detects `DATABASE_URL` and connects to **Neon PostgreSQL**. Data survives redeployments.
-* **Local Mode (Laptop):** Defaults to **SQLite** (`protocol_zero.db`) for easy testing without internet.
-* **Privacy Protocol:** The `.db` file is strictly **git-ignored**.
+* **Cloud Mode (Render):** Detects `DATABASE_URL` and connects to **Neon PostgreSQL**.
+* **Local Mode (Laptop):** Defaults to **SQLite** (`protocol_zero.db`) for easy testing.
 
 ## 🧠 The Philosophy
 
@@ -95,8 +89,9 @@ This tool relies on the **"Friction Theory"** of habit breaking. By inserting a 
 
 ## 🚀 Future Roadmap
 
-* **Multi-User Support:** Scale the database schema to track progress for multiple users in a single server.
-* **Gamification 2.0:** Add XP, Levels, and "Streaks" to the database.
+* **Global Leaderboards:** Compare your willpower against other users in the server.
+* **Web Integration:** Display your RPG stats (Level/Streak) directly on the web dashboard.
+* **Boss Battles:** Special events where multiple users must resist together to defeat a "Server Boss."
 
 ---
 
