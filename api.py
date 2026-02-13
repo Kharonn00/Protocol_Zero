@@ -228,30 +228,30 @@ def dashboard():
 # ==============================================================
 # THE RED BUTTON (Database Reset)
 # ==============================================================
-@app.get("/nuke_protocol_zero")
-def nuke_database():
-    """
-    WARNING: This endpoint deletes the entire database and rebuilds it.
-    Visit this URL once to fix the 'column does not exist' error.
-    """
-    print("☢️ NUKING DATABASE...")
-    try:
-        # 1. Get a direct connection
-        conn = db.get_connection()
-        cursor = conn.cursor()
-        
-        # 2. Drop the old broken tables
-        cursor.execute("DROP TABLE IF EXISTS interactions;")
-        cursor.execute("DROP TABLE IF EXISTS users;")
-        
-        conn.commit()
-        conn.close()
-        print("✅ Old tables destroyed.")
-        
-        # 3. Rebuild them with the new schema
-        db.initialize_db()
-        print("🏗️ New tables created.")
-        
-        return {"status": "SUCCESS. Database was nuked and rebuilt. You may now use the app."}
-    except Exception as e:
-        return {"status": "FAILED", "error": str(e)}
+# @app.get("/nuke_protocol_zero")
+# def nuke_database():
+#     """
+#     WARNING: This endpoint deletes the entire database and rebuilds it.
+#     Visit this URL once to fix the 'column does not exist' error.
+#     """
+#     print("☢️ NUKING DATABASE...")
+#     try:
+#         # 1. Get a direct connection
+#         conn = db.get_connection()
+#         cursor = conn.cursor()
+#         
+#         # 2. Drop the old broken tables
+#         cursor.execute("DROP TABLE IF EXISTS interactions;")
+#         cursor.execute("DROP TABLE IF EXISTS users;")
+#         
+#         conn.commit()
+#         conn.close()
+#         print("✅ Old tables destroyed.")
+#         
+#         # 3. Rebuild them with the new schema
+#         db.initialize_db()
+#         print("🏗️ New tables created.")
+#         
+#         return {"status": "SUCCESS. Database was nuked and rebuilt. You may now use the app."}
+#     except Exception as e:
+#         return {"status": "FAILED", "error": str(e)}
