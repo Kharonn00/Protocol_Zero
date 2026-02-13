@@ -10,137 +10,179 @@ class DatabaseManager:
         self.db_url = os.getenv("DATABASE_URL")
         self.is_postgres = bool(self.db_url)
 
-        # 2. Set SQL Dialect (The Translator)
+        # 2. Set SQL Dialect
         if self.is_postgres:
-            print("🚀 [DATABASE] Detected Cloud Mode (PostgreSQL)")
+            print("🚀 [DATABASE] Cloud Mode (PostgreSQL)")
             self.placeholder = "%s"
             self.id_type = "SERIAL PRIMARY KEY"
+            self.text_type = "TEXT"
         else:
-            print("🏠 [DATABASE] Detected Local Mode (SQLite)")
+            print("🏠 [DATABASE] Local Mode (SQLite)")
             self.db_name = "protocol_zero.db"
             self.placeholder = "?"
             self.id_type = "INTEGER PRIMARY KEY AUTOINCREMENT"
+            self.text_type = "TEXT"
 
         self.initialize_db()
 
     def get_connection(self):
-        """Establishes a connection to either Neon (Cloud) or SQLite (Local)."""
         if self.is_postgres:
-            # Connect to Neon
             return psycopg2.connect(self.db_url, sslmode='require')
         else:
-            # Connect to Local File
             return sqlite3.connect(self.db_name)
 
     def initialize_db(self):
-        """Creates the table if it doesn't exist."""
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # SQL SPELL: Create the Log Table (Adaptive)
-        # We use 'self.id_type' to handle the difference between DBs
-        create_query = f'''
+        # TABLE 1: INTERACTIONS (The Logs)
+        cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS interactions (
                 id {self.id_type},
-                user_name TEXT NOT NULL,
-                verdict TEXT NOT NULL,
-                timestamp TEXT NOT NULL
+                user_id {self.text_type},
+                user_name {self.text_type},
+                verdict {self.text_type},
+                timestamp {self.text_type}
             )
-        '''
-        cursor.execute(create_query)
+        ''')
+
+        # TABLE 2: USERS (The RPG Stats) - NEW!
+        # We use discord_id as the primary key so we don't have duplicates
+        cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS users (
+                discord_id {self.text_type} PRIMARY KEY,
+                username {self.text_type},
+                xp INTEGER DEFAULT 0,
+                level INTEGER DEFAULT 1,
+                streak INTEGER DEFAULT 0,
+                last_active {self.text_type}
+            )
+        ''')
         
         conn.commit()
         conn.close()
 
-    def log_interaction(self, user_name, verdict):
+    # --- LOGGING ---
+    def log_interaction(self, user_id, user_name, verdict):
         conn = self.get_connection()
         cursor = conn.cursor()
-        
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        # SQL SPELL: Insert Data (Adaptive)
-        # We use 'self.placeholder' (%s or ?)
+        # Log the event
         query = f'''
-            INSERT INTO interactions (user_name, verdict, timestamp)
-            VALUES ({self.placeholder}, {self.placeholder}, {self.placeholder})
+            INSERT INTO interactions (user_id, user_name, verdict, timestamp)
+            VALUES ({self.placeholder}, {self.placeholder}, {self.placeholder}, {self.placeholder})
         '''
-        cursor.execute(query, (user_name, verdict, current_time))
+        cursor.execute(query, (str(user_id), user_name, verdict, current_time))
         
         conn.commit()
         conn.close()
-        print(f"[LOG] {user_name} -> {verdict}")
+        print(f"[LOG] {user_name} ({user_id}) -> {verdict}")
 
+    # --- GAMIFICATION (NEW) ---
+    def update_xp(self, user_id, user_name, xp_amount):
+        """Adds XP to a user and handles leveling up."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Check if user exists, if not create them
+        # (Upsert logic is complex in SQL, so we do "Try Insert, Then Update")
+        
+        # 1. Try to find the user
+        cursor.execute(f"SELECT xp, level FROM users WHERE discord_id = {self.placeholder}", (str(user_id),))
+        result = cursor.fetchone()
+
+        if result is None:
+            # New User! Welcome to the game.
+            print(f"[RPG] New Challenger: {user_name}")
+            cursor.execute(f'''
+                INSERT INTO users (discord_id, username, xp, level, streak, last_active)
+                VALUES ({self.placeholder}, {self.placeholder}, {self.placeholder}, 1, 0, {self.placeholder})
+            ''', (str(user_id), user_name, xp_amount, current_time))
+            new_level = 1
+            current_xp = xp_amount
+        else:
+            # Existing User
+            current_xp = result[0] + xp_amount
+            current_level = result[1]
+            
+            # Simple Leveling Curve: Level * 100 XP required for next level
+            # e.g., Level 1 -> 2 needs 100 XP. Level 2 -> 3 needs 200 XP.
+            xp_needed = current_level * 100
+            
+            new_level = current_level
+            if current_xp >= xp_needed:
+                new_level += 1
+                current_xp = current_xp - xp_needed # Reset XP for next level bracket (optional style)
+                # OR keep total XP and just calc level. Let's keep it simple: Total XP accumulates.
+                # Actually, let's just increment level if threshold met.
+                print(f"🎉 LEVEL UP! {user_name} is now Lvl {new_level}!")
+
+            cursor.execute(f'''
+                UPDATE users 
+                SET xp = {self.placeholder}, level = {self.placeholder}, last_active = {self.placeholder}, username = {self.placeholder}
+                WHERE discord_id = {self.placeholder}
+            ''', (current_xp, new_level, current_time, user_name, str(user_id)))
+
+        conn.commit()
+        conn.close()
+        return new_level, current_xp
+
+    def get_user_stats(self, user_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT level, xp, streak FROM users WHERE discord_id = {self.placeholder}", (str(user_id),))
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return {"level": result[0], "xp": result[1], "streak": result[2]}
+        else:
+            return {"level": 1, "xp": 0, "streak": 0}
+
+    # --- ANALYTICS ---
     def get_total_count(self):
         conn = self.get_connection()
         cursor = conn.cursor()
-        
         cursor.execute("SELECT COUNT(*) FROM interactions")
         count = cursor.fetchone()[0]
-        
         conn.close()
         return count
 
     def get_recent_history(self, limit=5):
         conn = self.get_connection()
         cursor = conn.cursor()
-
-        # We use 'self.placeholder' for the LIMIT clause
         query = f"SELECT user_name, verdict, timestamp FROM interactions ORDER BY id DESC LIMIT {self.placeholder}"
         cursor.execute(query, (limit,))
-
         rows = cursor.fetchall()
         conn.close()
-
-        history = []
-        for row in rows:
-            history.append({
-                "user": row[0],
-                "verdict": row[1],
-                "time": row[2]
-            })
-        return history
+        return [{"user": r[0], "verdict": r[1], "time": r[2]} for r in rows]
 
     def get_verdict_counts(self):
         conn = self.get_connection()
         cursor = conn.cursor()
-
         cursor.execute("SELECT verdict, COUNT(*) FROM interactions GROUP BY verdict")
         rows = cursor.fetchall()
         conn.close()
-
-        stats = {}
-        for row in rows:
-            stats[row[0]] = row[1]
-        return stats
+        return {r[0]: r[1] for r in rows}
 
     def get_hourly_activity(self):
-        """Returns activity per hour. Handles the syntax difference."""
         conn = self.get_connection()
         cursor = conn.cursor()
-        
-        # SQL SPELL: Time Extraction (The Tricky Part)
         if self.is_postgres:
-            # Postgres: Turn text to timestamp, then extract hour
             query = "SELECT TO_CHAR(timestamp::timestamp, 'HH24'), COUNT(*) FROM interactions GROUP BY 1"
         else:
-            # SQLite: Use string formatting
             query = "SELECT strftime('%H', timestamp), COUNT(*) FROM interactions GROUP BY 1"
-
         cursor.execute(query)
         rows = cursor.fetchall()
         conn.close()
-        
         hourly_data = {str(i).zfill(2): 0 for i in range(24)}
-        
         for row in rows:
-            hour = row[0]
-            if hour in hourly_data:
-                hourly_data[hour] = row[1]
-                
+            if row[0] in hourly_data:
+                hourly_data[row[0]] = row[1]
         return list(hourly_data.values())
 
-# TEST AREA
 if __name__ == "__main__":
     db = DatabaseManager()
-    db.log_interaction("Cloud_Test", "Infinite Burpees")
-    print(f"Total Logs: {db.get_total_count()}")
+    print("Database Schema Updated.")

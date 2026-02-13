@@ -10,3 +10,6 @@ __pycache__/
 
 # Database (Keep Local Only)
 *.db
+
+# Gemini CLI
+GEMINI.md
