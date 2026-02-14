@@ -16,17 +16,17 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
     * **Local:** Runs on lightweight **SQLite**.
     * **Cloud:** Automatically switches to **PostgreSQL (Neon)** for immortal data persistence.
 * **Unified Process Management:** The **FastAPI** server and **Discord Bot** are fused into a single asynchronous event loop.
-* **RPG Progression System (NEW):**
+* **RPG Progression System:**
     * **XP & Leveling:** Gain XP for honesty (`!oracle`) and massive XP for resistance (`!resist`).
     * **Streak Tracking:** The engine tracks your consecutive victories. One failure resets the counter to zero.
-    * **Multi-User Support:** Database tracks stats individually for every user in the server.
+    * **Live Leaderboard:** Real-time ranking of the Top 5 Agents based on Level and XP.
 * **Discord Bot Interface:**
     * **AI-Powered Roasts:** Connects to **Google Gemini** to generate context-aware insults or grudging praise.
     * **Stochastic Judgement:** Randomly assigns physical or mental tasks to derail cravings.
 * **Cyberpunk Command Center:** A **FastAPI**-powered dashboard featuring:
     * **The Mystic 8-Ball:** An animated orb that shakes to reveal your fate.
+    * **Split-View Analytics:** Side-by-side view of recent failures and the server Leaderboard.
     * **The Voice of Judgment:** Browser-native **Text-to-Speech (TTS)**.
-    * **Temporal Analytics:** Heat-mapping your weakest hours.
 
 ## 🛠️ Installation
 
@@ -52,7 +52,14 @@ To run the full stack locally, configure your `.env` file.
     ```env
     DISCORD_TOKEN=your_discord_token_here
     GEMINI_API_KEY=your_google_ai_key_here
-    # Optional: Add DATABASE_URL if connecting to Cloud DB locally
+    
+    # SAFE MODE (Optional)
+    # Set to True if you want to work on the website without connecting to Discord
+    # This prevents Rate Limit bans during development.
+    DISABLE_BOT=True 
+    
+    # CLOUD DB (Optional)
+    # Add DATABASE_URL if connecting to Cloud DB locally
     # DATABASE_URL=postgresql://...
     ```
 
@@ -65,6 +72,7 @@ The Oracle and the Discord Bot are live and fused.
     * `!oracle` -> **Failure.** You felt the urge and gave in. The bot assigns a punishment, resets your streak, and awards pity XP.
     * `!resist` -> **Victory.** You felt the urge but said NO. The bot praises you, increments your streak, and awards massive XP.
     * `!stats` -> **Status.** Displays your current Level, Total XP, and Active Streak.
+    * `!leaderboard` -> **Elite.** Displays the Top 5 Agents in the server.
 
 ### Option B: Local Development
 Launch the stack on your machine.
@@ -75,6 +83,7 @@ uvicorn api:app --reload
 ```
 
 * **Dashboard:** `http://127.0.0.1:8000/dashboard`
+* *Note: If `DISABLE_BOT=True`, the Discord commands will not work, but the Dashboard will be fully functional.*
 
 ## 🗄️ The Archives (Data Persistence)
 
@@ -82,6 +91,7 @@ Protocol Zero utilizes a **Bilingual Database Manager**:
 
 * **Cloud Mode (Render):** Detects `DATABASE_URL` and connects to **Neon PostgreSQL**.
 * **Local Mode (Laptop):** Defaults to **SQLite** (`protocol_zero.db`) for easy testing.
+* **Universal Adapter:** The system automatically swaps SQL syntax (`?` vs `%s`) based on the environment.
 
 ## 🧠 The Philosophy
 
@@ -89,9 +99,9 @@ This tool relies on the **"Friction Theory"** of habit breaking. By inserting a 
 
 ## 🚀 Future Roadmap
 
-* **Global Leaderboards:** Compare your willpower against other users in the server.
-* **Web Integration:** Display your RPG stats (Level/Streak) directly on the web dashboard.
 * **Boss Battles:** Special events where multiple users must resist together to defeat a "Server Boss."
+* **Achievements:** Badges for hitting milestones (e.g., "7 Day Streak", "Level 10").
+* **Visual Graphs:** Line charts tracking XP growth over time.
 
 ---
 
