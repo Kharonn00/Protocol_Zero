@@ -426,6 +426,40 @@ async def on_message(message):
         await message.channel.send(embed=embed)
 
     # ========================================================================
+    # COMMAND: !leaderboard (Top 5 Agents)
+    # ========================================================================
+    elif message.content.startswith('!leaderboard'):
+        print(f"[DEBUG] Leaderboard Request from {user_name}")
+        
+        # 1. Get the Raw Data from Database
+        # Remember: It returns a list like [{'username': 'Kharonn', 'level': 10...}, ...]
+        top_agents = db.get_leaderboard()
+        
+        # 2. Build the Message String
+        # We start with an empty string and add lines to it
+        description_text = ""
+        
+        for i, agent in enumerate(top_agents):
+            # i+1 makes it start at 1 instead of 0
+            # \n creates a new line
+            rank = i + 1
+            name = agent['username']
+            lvl = agent['level']
+            xp = agent['xp']
+            
+            # Format: "1. Kharonn (Lvl 10 | 1050 XP)"
+            description_text += f"**#{rank}** {name} — Lvl {lvl} ({xp} XP)\n"
+            
+        # 3. Create the Embed
+        embed = discord.Embed(
+            title="🏆 PROTOCOL ZERO ELITE 🏆",
+            description=description_text,
+            color=0xFFD700  # Gold Color
+        )
+        
+        await message.channel.send(embed=embed)
+
+    # ========================================================================
     # COMMAND: !stats (STATUS - Check user's progress)
     # ========================================================================
     elif message.content.startswith('!stats'):

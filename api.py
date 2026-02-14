@@ -90,6 +90,10 @@ def get_stats():
 def get_history():
     return {"recent_punishments": db.get_recent_history(limit=5)}
 
+@app.get("/leaderboard")
+def get_leaderboard():
+    return {"leaderboard": db.get_leaderboard()}
+
 # ==============================================================
 # THE FIX IS HERE: /summon
 # ==============================================================
@@ -143,6 +147,7 @@ def dashboard():
     # 1. Gather Data
     count = db.get_total_count()
     history = db.get_recent_history(limit=5)
+    leaderboard = db.get_leaderboard()  # Fetch the top 5 users
     distribution = db.get_verdict_counts()
     hourly_stats = db.get_hourly_activity()
     
@@ -151,11 +156,18 @@ def dashboard():
     donut_values = list(distribution.values())
     bar_labels = [f"{i:02d}:00" for i in range(24)]
     
-    # 3. Build History Table
+    # 3. Build History Table HTML
     history_html = ""
     for row in history:
         history_html += f"<tr><td>{row['time']}</td><td>{row['user']}</td><td style='color: #ff3333;'>{row['verdict']}</td></tr>"
 
+    # 4. Build Leaderboard Table HTML
+    leaderboard_html = ""
+    for i, row in enumerate(leaderboard):
+        # i+1 gives us Rank #1 instead of #0
+        leaderboard_html += f"<tr><td>#{i+1}</td><td>{row['username']}</td><td>Lvl {row['level']}</td><td>{row['xp']} XP</td></tr>"
+
+    # 5. The Frontend Interface
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -180,8 +192,9 @@ def dashboard():
             .charts-wrapper {{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin: 20px 0; }}
             .chart-box {{ width: 48%; height: 250px; position: relative; }}
             @media (max-width: 600px) {{ .chart-box {{ width: 100%; height: 200px; }} h1 {{ font-size: 1.5rem; }} .counter {{ font-size: 3rem; }} table {{ font-size: 10px; }} }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; border-top: 1px solid #00ff41; }}
+            table {{ width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; border-top: 1px solid #00ff41; }}
             th, td {{ padding: 8px; text-align: left; border-bottom: 1px solid #333; }}
+            h3 {{ border-bottom: 1px solid #00ff41; padding-bottom: 5px; margin-bottom: 5px; }}
         </style>
     </head>
     <body>
@@ -191,11 +204,23 @@ def dashboard():
             <div class="counter">{count}</div>
             <div class="ball-container"><div class="magic-8-ball" onclick="shakeBall()"><div class="face-8">8</div></div></div>
             <div id="verdict-box"><span id="verdict-text"></span><span id="roast-text" class="roast-text"></span></div>
+            
             <div class="charts-wrapper">
                 <div class="chart-box"><canvas id="donutChart"></canvas></div>
                 <div class="chart-box"><canvas id="barChart"></canvas></div>
             </div>
-            <table><tr><th>Time</th><th>Subject</th><th>Verdict</th></tr>{history_html}</table>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; width: 100%; justify-content: center; margin-top: 20px;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>RECENT ACTIVITY</h3>
+                    <table><tr><th>Time</th><th>Agent</th><th>Verdict</th></tr>{history_html}</table>
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>TOP AGENTS</h3>
+                    <table><tr><th>Rank</th><th>Agent</th><th>Level</th><th>XP</th></tr>{leaderboard_html}</table>
+                </div>
+            </div>
+
         </div>
         <script>
             function speak(text) {{ window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.pitch = 0.8; utterance.rate = 0.9; window.speechSynthesis.speak(utterance); }}
@@ -224,7 +249,7 @@ def dashboard():
     </html>
     """
     return html_content
-
+    
 # ==============================================================
 # THE RED BUTTON (Database Reset)
 # ==============================================================

@@ -381,6 +381,24 @@ class DatabaseManager:
                 "streak": 0
             }
 
+    def get_leaderboard(self):
+        """
+        Retrieves the top 5 users based on Level and XP.
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        # We need to order by Level (highest first), then XP (highest first)
+        query = "SELECT username, level, xp FROM users ORDER BY level DESC, xp DESC LIMIT 5"
+
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        conn.close()
+
+        # Convert list of tuples [(Name, Lvl, XP), ...] into a clean list of dictionaries
+        return [{"username": r[0], "level": r[1], "xp": r[2]} for r in rows]
+
     # ========================================================================
     # ANALYTICS METHODS - Data aggregation and reporting
     # ========================================================================
