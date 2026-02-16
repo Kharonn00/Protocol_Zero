@@ -78,7 +78,7 @@ BACKUP_ROASTS = [
 # API ENDPOINTS (Routes)
 # ==============================================================
 
-@app.get("/", methods=["GET", "HEAD"])
+@app.get("/")
 def read_root():
     return {"status": "Protocol Zero API is Online"}
 
