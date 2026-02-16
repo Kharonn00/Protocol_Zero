@@ -10,39 +10,23 @@ from urllib.parse import urlparse  # For parsing database URLs (not used but imp
 # ============================================================================
 class DatabaseManager:
     """
-    A database abstraction layer that works with both SQLite and PostgreSQL.
-    
-    Why support both?
-    - SQLite: Perfect for local development (no setup needed, just a file)
-    - PostgreSQL: Used by cloud platforms like Render, Railway, Heroku
-    
+
     This class automatically detects which database to use based on
     environment variables, making it easy to develop locally and deploy
     to the cloud without changing code.
     
-    Key Concepts:
-    - Database abstraction: Write once, run on multiple databases
-    - Environment-based configuration: Different settings for dev vs prod
-    - SQL dialect compatibility: Handle differences between databases
     """
     
     def __init__(self):
-        """
-        Constructor - sets up database configuration and creates tables.
-        
-        This runs when you create a DatabaseManager instance.
-        It detects the environment and initializes the database schema.
-        """
-        
-        # ====================================================================
-        # STEP 1: DETECT ENVIRONMENT (Cloud vs Local)
-        # ====================================================================
+
         # Check if DATABASE_URL environment variable exists
         # Cloud platforms (Render, Railway, Heroku) provide this automatically
+
         self.db_url = os.getenv("DATABASE_URL")
         
         # If DATABASE_URL exists, we're in the cloud using PostgreSQL
         # If not, we're local using SQLite
+
         self.is_postgres = bool(self.db_url)
 
         # ====================================================================
@@ -229,114 +213,98 @@ class DatabaseManager:
     # GAMIFICATION METHODS - XP, Levels, and Progression
     # ========================================================================
     
-    def update_xp(self, user_id, user_name, xp_amount):
+    def update_xp(self, user_id, user_name, xp_amount, cooldown_seconds=300):
         """
-        Adds XP to a user and handles leveling up.
+        Updates XP atomically, BUT ONLY IF the cooldown has passed.
+        Prevents spammers from farming XP.
         
-        This implements the RPG-style progression system:
-        - New users start at Level 1 with 0 XP
-        - XP accumulates with each interaction
-        - When XP threshold is reached, user levels up
-        
-        Parameters:
-            user_id (str): Discord ID
-            user_name (str): Display name (updates if changed)
-            xp_amount (int): How much XP to add (10 for failure, 50 for resist)
-        
-        Returns:
-            tuple: (new_level, current_xp)
-        
-        This combines CREATE and UPDATE operations (upsert pattern)
+        default cooldown_seconds = 300 (5 minutes). 
+        Adjust this number to change how often they can claim victory.
         """
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Get current timestamp
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Get current time
+        now = datetime.now()
+        current_time_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
         # ====================================================================
-        # UPSERT LOGIC - Update if exists, Insert if new
+        # STEP 1: THE GATEKEEPER (Check for Spam)
         # ====================================================================
-        # "Upsert" = Update + Insert
-        # We check if the user exists, then either create or update them
-        # (Some databases have native UPSERT, but we do it manually for compatibility)
+        cursor.execute(f"SELECT last_active FROM users WHERE discord_id = {self.placeholder}", (str(user_id),))
+        result = cursor.fetchone()
+
+        if result and result[0]:
+            # User exists, check their timestamp
+            last_active_str = result[0]
+            try:
+                # Convert database string back to datetime object
+                last_active = datetime.strptime(last_active_str, "%Y-%m-%d %H:%M:%S")
+                
+                # Calculate the difference
+                time_diff = now - last_active
+                seconds_passed = time_diff.total_seconds()
+                
+                if seconds_passed < cooldown_seconds:
+                    # SPAMMER DETECTED!
+                    wait_time = int(cooldown_seconds - seconds_passed)
+                    print(f"🚫 REJECTED: {user_name} is too greedy. Wait {wait_time}s.")
+                    conn.close()
+                    # Return None to signal that no XP was awarded
+                    return None, None 
+            except ValueError:
+                # If the date format is messed up in the DB, ignore and proceed (fail open)
+                # or reset it.
+                pass
+
+        # ====================================================================
+        # STEP 2: THE ATOMIC UPDATE (If they passed the check)
+        # ====================================================================
         
-        # Step 1: Try to find the user
-        cursor.execute(
-            f"SELECT xp, level FROM users WHERE discord_id = {self.placeholder}", 
-            (str(user_id),)
-        )
-        result = cursor.fetchone()  # Returns None if user doesn't exist
-
-        if result is None:
-            # ================================================================
-            # NEW USER - Create their account
-            # ================================================================
-            print(f"[RPG] New Challenger: {user_name}")
-            
-            # Insert a new user with starting stats
-            cursor.execute(f'''
+        if self.is_postgres:
+            # PostgreSQL ON CONFLICT (Upsert)
+            query = """
                 INSERT INTO users (discord_id, username, xp, level, streak, last_active)
-                VALUES ({self.placeholder}, {self.placeholder}, {self.placeholder}, 1, 0, {self.placeholder})
-            ''', (str(user_id), user_name, xp_amount, current_time))
-            
-            # Return their starting stats
-            new_level = 1
-            current_xp = xp_amount
+                VALUES (%s, %s, %s, 1, 0, %s)
+                ON CONFLICT (discord_id) 
+                DO UPDATE SET 
+                    xp = users.xp + EXCLUDED.xp,
+                    username = EXCLUDED.username,
+                    last_active = EXCLUDED.last_active;
+            """
+            cursor.execute(query, (str(user_id), user_name, xp_amount, current_time_str))
             
         else:
-            # ================================================================
-            # EXISTING USER - Update their stats
-            # ================================================================
-            # Extract current stats from database result
-            # result is a tuple: (xp, level)
-            current_xp = result[0] + xp_amount  # Add new XP to existing XP
-            current_level = result[1]  # Current level
+            # SQLite Manual Upsert
+            cursor.execute("INSERT OR IGNORE INTO users (discord_id, username, xp, level, streak, last_active) VALUES (?, ?, 0, 1, 0, ?)", 
+                           (str(user_id), user_name, current_time_str))
             
-            # ================================================================
-            # LEVELING SYSTEM - Check if user should level up
-            # ================================================================
-            # Simple leveling curve: Each level requires Level × 100 XP
-            # Level 1→2: 100 XP needed
-            # Level 2→3: 200 XP needed
-            # Level 3→4: 300 XP needed
-            # This creates exponential growth (gets harder to level up)
-            
-            xp_needed = current_level * 100
-            
-            new_level = current_level  # Start with current level
-            
-            # Check if user has enough XP to level up
-            if current_xp >= xp_needed:
-                new_level += 1  # Level up!
-                
-                # Option A: Subtract XP for next level (XP resets each level)
-                # current_xp = current_xp - xp_needed
-                
-                # Option B: Keep total XP (what we're doing - simpler)
-                # Total XP just keeps accumulating
-                
-                # Celebrate the level up!
-                print(f"🎉 LEVEL UP! {user_name} is now Lvl {new_level}!")
+            cursor.execute("UPDATE users SET xp = xp + ?, username = ?, last_active = ? WHERE discord_id = ?", 
+                           (xp_amount, user_name, current_time_str, str(user_id)))
 
-            # ================================================================
-            # UPDATE THE DATABASE
-            # ================================================================
-            # Update all fields (including username in case it changed)
-            cursor.execute(f'''
-                UPDATE users 
-                SET xp = {self.placeholder}, 
-                    level = {self.placeholder}, 
-                    last_active = {self.placeholder}, 
-                    username = {self.placeholder}
-                WHERE discord_id = {self.placeholder}
-            ''', (current_xp, new_level, current_time, user_name, str(user_id)))
+        # ====================================================================
+        # STEP 3: LEVEL UP CHECK
+        # ====================================================================
+        
+        cursor.execute(f"SELECT xp, level FROM users WHERE discord_id = {self.placeholder}", (str(user_id),))
+        row = cursor.fetchone()
+        current_xp, current_level = row
+        
+        xp_needed = current_level * 100
+        new_level = current_level
+        
+        while current_xp >= xp_needed:
+            new_level += 1
+            xp_needed = new_level * 100
+            print(f"⚡ ASCENSION! {user_name} has reached Level {new_level}!")
 
-        # Save changes and close
+        if new_level > current_level:
+            cursor.execute(f"UPDATE users SET level = {self.placeholder} WHERE discord_id = {self.placeholder}", 
+                           (new_level, str(user_id)))
+
         conn.commit()
         conn.close()
         
-        # Return the user's new stats
         return new_level, current_xp
 
     def get_user_stats(self, user_id):
@@ -387,7 +355,7 @@ class DatabaseManager:
         """
         conn = self.get_connection()
         cursor = conn.cursor()
-
+        
         # We need to order by Level (highest first), then XP (highest first)
         query = "SELECT username, level, xp FROM users ORDER BY level DESC, xp DESC LIMIT 5"
 
@@ -395,7 +363,6 @@ class DatabaseManager:
         rows = cursor.fetchall()
 
         conn.close()
-
         # Convert list of tuples [(Name, Lvl, XP), ...] into a clean list of dictionaries
         return [{"username": r[0], "level": r[1], "xp": r[2]} for r in rows]
 

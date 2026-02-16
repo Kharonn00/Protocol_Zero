@@ -102,19 +102,25 @@ def summon_oracle():
     """
     Generates a punishment, logs it to DB, and returns it.
     """
-    # 1. Generate Punishment
-    apocalypse = datetime.date(2027, 1, 1)
+    # 1. Define the Web User
     # We use a generic name for web users for now
     web_user_id = "WEB_USER_01"
     web_user_name = "Web_Agent"
     
-    engine = ProtocolZero(web_user_name, apocalypse)
-    verdict = engine.consult_oracle()
+    # 2. Summon the Oracle (V2 Syntax)
+    # OLD & BROKEN: engine = ProtocolZero(web_user_name, apocalypse)
+    # NEW & SHINY: Just the name. The Oracle knows what to do.
+    engine = ProtocolZero(web_user_name) 
     
-    # 2. Generate AI Roast
+    # 3. Consult the Oracle
+    # We pass streak=0 because web users are anonymous and have no shame (yet).
+    verdict = engine.consult_oracle(streak=0)
+    
+    # 4. Generate AI Roast
     roast = ""
     if client:
         try:
+            # Centralized prompt logic could go here, but this works for now.
             prompt = f"You are a ruthless, cynical AI drill sergeant. The user just failed a willpower check and was sentenced to: '{verdict}'. Write a brutal, one-sentence roast. Do not be polite."
             response = client.models.generate_content(
                 model='gemini-2.5-flash-lite',
@@ -127,12 +133,12 @@ def summon_oracle():
     else:
         roast = random.choice(BACKUP_ROASTS)
     
-    # 3. SAVE TO DATABASE (This was missing!)
+    # 5. SAVE TO DATABASE
     try:
         # A. Log the interaction
         db.log_interaction(web_user_id, web_user_name, verdict)
         
-        # B. Update XP (Even web users get pity XP for confessing)
+        # B. Update XP (Pity XP for the weak)
         # Note: We aren't handling streaks on web yet, just XP/History
         db.update_xp(web_user_id, web_user_name, 10)
         
@@ -253,30 +259,32 @@ def dashboard():
 # ==============================================================
 # THE RED BUTTON (Database Reset)
 # ==============================================================
-# @app.get("/nuke_protocol_zero")
-# def nuke_database():
-#     """
-#     WARNING: This endpoint deletes the entire database and rebuilds it.
-#     Visit this URL once to fix the 'column does not exist' error.
-#     """
-#     print("☢️ NUKING DATABASE...")
-#     try:
-#         # 1. Get a direct connection
-#         conn = db.get_connection()
-#         cursor = conn.cursor()
-#         
-#         # 2. Drop the old broken tables
-#         cursor.execute("DROP TABLE IF EXISTS interactions;")
-#         cursor.execute("DROP TABLE IF EXISTS users;")
-#         
-#         conn.commit()
-#         conn.close()
-#         print("✅ Old tables destroyed.")
-#         
-#         # 3. Rebuild them with the new schema
-#         db.initialize_db()
-#         print("🏗️ New tables created.")
-#         
-#         return {"status": "SUCCESS. Database was nuked and rebuilt. You may now use the app."}
-#     except Exception as e:
-#         return {"status": "FAILED", "error": str(e)}
+"""
+@app.get("/nuke_protocol_zero")
+def nuke_database():
+    
+    WARNING: This endpoint deletes the entire database and rebuilds it.
+    Visit this URL once to fix the 'column does not exist' error.
+    
+    print("☢️ NUKING DATABASE...")
+    try:
+        # 1. Get a direct connection
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        
+        # 2. Drop the old broken tables
+        cursor.execute("DROP TABLE IF EXISTS interactions;")
+        cursor.execute("DROP TABLE IF EXISTS users;")
+        
+        conn.commit()
+        conn.close()
+        print("✅ Old tables destroyed.")
+        
+        # 3. Rebuild them with the new schema
+        db.initialize_db()
+        print("🏗️ New tables created.")
+        
+        return {"status": "SUCCESS. Database was nuked and rebuilt. You may now use the app."}
+    except Exception as e:
+        return {"status": "FAILED", "error": str(e)}
+"""
