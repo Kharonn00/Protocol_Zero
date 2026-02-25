@@ -46,14 +46,9 @@ db = DatabaseManager()
 async def start_discord_bot():
     """
     Starts the Discord bot in the background.
-    
-    CRITICAL FIX FOR RATE LIMITS:
-    We check if a special env var 'DISABLE_BOT' is set.
-    If you are testing the website locally, set DISABLE_BOT=True in your .env
-    so you don't spam Discord connections.
     """
     discord_token = os.getenv("DISCORD_TOKEN")
-    disable_bot = os.getenv("DISABLE_BOT") # <--- NEW CHECK
+    disable_bot = os.getenv("DISABLE_BOT") 
 
     if disable_bot == "True":
         print("🛑 [CONFIG] Discord Bot is DISABLED locally (Safe Mode).")
@@ -95,32 +90,24 @@ def get_leaderboard():
     return {"leaderboard": db.get_leaderboard()}
 
 # ==============================================================
-# THE FIX IS HERE: /summon
+# /summon - THE LOKI REFACTOR
 # ==============================================================
 @app.post("/summon")
 def summon_oracle():
     """
     Generates a punishment, logs it to DB, and returns it.
     """
-    # 1. Define the Web User
-    # We use a generic name for web users for now
     web_user_id = "WEB_USER_01"
     web_user_name = "Web_Agent"
     
-    # 2. Summon the Oracle (V2 Syntax)
-    # OLD & BROKEN: engine = ProtocolZero(web_user_name, apocalypse)
-    # NEW & SHINY: Just the name. The Oracle knows what to do.
     engine = ProtocolZero(web_user_name) 
     
-    # 3. Consult the Oracle
-    # We pass streak=0 because web users are anonymous and have no shame (yet).
+    # We pass streak=0 because web users are anonymous.
     verdict = engine.consult_oracle(streak=0)
     
-    # 4. Generate AI Roast
     roast = ""
     if client:
         try:
-            # Centralized prompt logic could go here, but this works for now.
             prompt = f"You are a ruthless, cynical AI drill sergeant. The user just failed a willpower check and was sentenced to: '{verdict}'. Write a brutal, one-sentence roast. Do not be polite."
             response = client.models.generate_content(
                 model='gemini-2.5-flash-lite',
@@ -133,15 +120,10 @@ def summon_oracle():
     else:
         roast = random.choice(BACKUP_ROASTS)
     
-    # 5. SAVE TO DATABASE
+    # 5. SAVE TO DATABASE (CENTRALIZED)
     try:
-        # A. Log the interaction
-        db.log_interaction(web_user_id, web_user_name, verdict)
-        
-        # B. Update XP (Pity XP for the weak)
-        # Note: We aren't handling streaks on web yet, just XP/History
-        db.update_xp(web_user_id, web_user_name, 10)
-        
+        # FIX: One True Function to rule them all.
+        db.register_failure(web_user_id, web_user_name, verdict)
         print(f"✅ [WEB] Saved interaction for {web_user_name}")
     except Exception as e:
         print(f"❌ [WEB] Database Error: {e}")
@@ -153,7 +135,7 @@ def dashboard():
     # 1. Gather Data
     count = db.get_total_count()
     history = db.get_recent_history(limit=5)
-    leaderboard = db.get_leaderboard()  # Fetch the top 5 users
+    leaderboard = db.get_leaderboard()  
     distribution = db.get_verdict_counts()
     hourly_stats = db.get_hourly_activity()
     
@@ -170,7 +152,6 @@ def dashboard():
     # 4. Build Leaderboard Table HTML
     leaderboard_html = ""
     for i, row in enumerate(leaderboard):
-        # i+1 gives us Rank #1 instead of #0
         leaderboard_html += f"<tr><td>#{i+1}</td><td>{row['username']}</td><td>Lvl {row['level']}</td><td>{row['xp']} XP</td></tr>"
 
     # 5. The Frontend Interface
@@ -255,24 +236,18 @@ def dashboard():
     </html>
     """
     return html_content
-    
+
 # ==============================================================
-# THE RED BUTTON (Database Reset)
+# THE RED BUTTON (Database Reset) - Kept Safely Commented Out
 # ==============================================================
 """
 @app.get("/nuke_protocol_zero")
 def nuke_database():
-    
-    WARNING: This endpoint deletes the entire database and rebuilds it.
-    Visit this URL once to fix the 'column does not exist' error.
-    
     print("☢️ NUKING DATABASE...")
     try:
-        # 1. Get a direct connection
         conn = db.get_connection()
         cursor = conn.cursor()
         
-        # 2. Drop the old broken tables
         cursor.execute("DROP TABLE IF EXISTS interactions;")
         cursor.execute("DROP TABLE IF EXISTS users;")
         
@@ -280,7 +255,6 @@ def nuke_database():
         conn.close()
         print("✅ Old tables destroyed.")
         
-        # 3. Rebuild them with the new schema
         db.initialize_db()
         print("🏗️ New tables created.")
         

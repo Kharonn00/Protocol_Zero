@@ -516,6 +516,42 @@ class DatabaseManager:
         # Chart.js expects a simple list, not a dictionary
         return list(hourly_data.values())
 
+    # ========================================================================
+    # LOGIC CENTRALIZATION (THE REFACTOR)
+    # ========================================================================
+    
+    def register_failure(self, user_id, user_name, verdict):
+        """
+        The One True Function for handling mortal weakness.
+        Centralizes the logging, the pity XP, and the streak reset.
+        """
+        print(f"📉 [DB] Registering Failure for {user_name}...")
+        
+        # 1. THE ARCHIVE OF SHAME
+        # First, we permanently log the verdict so history remembers this failure.
+        self.log_interaction(user_id, user_name, verdict)
+        
+        # 2. THE CONSOLATION PRIZE (XP & User Creation)
+        # We award 10 Pity XP. 
+        # Crucially, we set cooldown_seconds=0. Why? Because if you fail twice 
+        # in 5 minutes, the database MUST record both failures. We do not gatekeep weakness.
+        # This step also conveniently ensures the user exists in the database via our Upsert.
+        new_level, current_xp = self.update_xp(user_id, user_name, 10, cooldown_seconds=0)
+        
+        # 3. THE FALL (Reset Streak)
+        # Now that we know the user exists (thanks to step 2), we shatter their streak.
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        # We use the parameterized placeholder to keep the Frost Giants (SQL Injectors) out.
+        cursor.execute(f"UPDATE users SET streak = 0 WHERE discord_id = {self.placeholder}", (str(user_id),))
+        
+        conn.commit()
+        conn.close()
+        
+        # Return the updated stats so the bots and APIs can display them to the disgraced user.
+        return new_level, current_xp
+
 
 # ============================================================================
 # TESTING BLOCK - Only runs when file is executed directly
