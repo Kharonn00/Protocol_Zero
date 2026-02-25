@@ -1,8 +1,8 @@
-import os           # Allows us to interact with the operating system (e.g., read environment variables)
-import datetime     # Tools for working with dates and times
-import random       # Generates random selections
-import json         # Handles JSON data (converting Python objects to JSON format)
-import asyncio      # Enables asynchronous programming (running tasks concurrently)
+import os
+import datetime
+import random
+import json
+import asyncio
 
 # Custom modules (files in the same project)
 from bot import client as discord_bot              # Imports the Discord bot client
@@ -90,7 +90,7 @@ def get_leaderboard():
     return {"leaderboard": db.get_leaderboard()}
 
 # ==============================================================
-# /summon - THE LOKI REFACTOR
+# /summon - THE REFACTOR
 # ==============================================================
 @app.post("/summon")
 def summon_oracle():
