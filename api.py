@@ -16,11 +16,37 @@ from fastapi.responses import HTMLResponse         # Allows us to return HTML co
 from dotenv import load_dotenv                     # Loads environment variables from a .env file
 from google import genai                           # Google's Gemini AI library
 
+# The Serpent's defensive scales
+from fastapi import Security, HTTPException, status
+from fastapi.security import APIKeyHeader
+
 # ==============================================================
 # STEP 1: Load Secret Keys from Environment Variables
 # ==============================================================
 load_dotenv()
 GOOGLE_KEY = os.getenv("GEMINI_API_KEY")
+
+# ==============================================================
+# THE GATEKEEPER (API Security)
+# ==============================================================
+# We fetch a secret key from the .env file. If you forgot to set it, 
+# it defaults to something obviously broken so you notice.
+WEB_SECRET_KEY = os.getenv("WEB_API_KEY", "mortal_forgot_to_set_a_key")
+
+# We expect the client to send a header named "X-Oracle-Key"
+api_key_header = APIKeyHeader(name="X-Oracle-Key", auto_error=True)
+
+def verify_api_key(api_key: str = Security(api_key_header)):
+    """
+    Dependency function: FastAPI will run this BEFORE letting anyone touch /summon.
+    """
+    if api_key != WEB_SECRET_KEY:
+        # I laugh at your pathetic attempt to breach my walls.
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The Oracle rejects your unauthorized query. Begone."
+        )
+    return api_key
 
 # ==============================================================
 # STEP 2: Configure the AI Client (Google Gemini)
@@ -91,12 +117,13 @@ def get_leaderboard():
     return {"leaderboard": db.get_leaderboard()}
 
 # ==============================================================
-# /summon - THE REFACTOR
+# /summon - SECURED & CENTRALIZED
 # ==============================================================
 @app.post("/summon")
-def summon_oracle():
+def summon_oracle(api_key: str = Security(verify_api_key)):
     """
     Generates a punishment, logs it to DB, and returns it.
+    Now guarded by the Gatekeeper.
     """
     web_user_id = "WEB_USER_01"
     web_user_name = "Web_Agent"
@@ -123,7 +150,7 @@ def summon_oracle():
     
     # 5. SAVE TO DATABASE (CENTRALIZED)
     try:
-        # FIX: One True Function to rule them all.
+        # One True Function to rule them all.
         db.register_failure(web_user_id, web_user_name, verdict)
         print(f"✅ [WEB] Saved interaction for {web_user_name}")
     except Exception as e:
@@ -145,25 +172,23 @@ def dashboard():
     donut_values = list(distribution.values())
     bar_labels = [f"{i:02d}:00" for i in range(24)]
     
-    # 3. Build History Table HTML (SANITIZED)
+    # 3. Build History Table HTML (SANITIZED AGAINST XSS)
     history_html = ""
     for row in history:
-        # We escape the user inputs to neutralize malicious scripts
         safe_time = html.escape(str(row['time']))
         safe_user = html.escape(str(row['user']))
         safe_verdict = html.escape(str(row['verdict']))
         
         history_html += f"<tr><td>{safe_time}</td><td>{safe_user}</td><td style='color: #ff3333;'>{safe_verdict}</td></tr>"
 
-    # 4. Build Leaderboard Table HTML (SANITIZED)
+    # 4. Build Leaderboard Table HTML (SANITIZED AGAINST XSS)
     leaderboard_html = ""
     for i, row in enumerate(leaderboard):
-        # We escape the username. Never trust user input. NEVER.
         safe_username = html.escape(str(row['username']))
-        
         leaderboard_html += f"<tr><td>#{i+1}</td><td>{safe_username}</td><td>Lvl {row['level']}</td><td>{row['xp']} XP</td></tr>"
 
     # 5. The Frontend Interface
+    # Observe the double brackets {{ and }} for JavaScript within the Python f-string.
     html_content = f"""
     <!DOCTYPE html>
     <html>
@@ -220,15 +245,26 @@ def dashboard():
         </div>
         <script>
             function speak(text) {{ window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.pitch = 0.8; utterance.rate = 0.9; window.speechSynthesis.speak(utterance); }}
+            
             async function shakeBall() {{
                 const ball = document.querySelector('.magic-8-ball');
                 const box = document.getElementById('verdict-box');
                 const vText = document.getElementById('verdict-text');
                 const rText = document.getElementById('roast-text');
+                
                 box.style.display = 'none';
                 ball.classList.add('shaking');
-                const response = await fetch('/summon', {{ method: 'POST' }});
+                
+                // THE GATEKEEPER'S KEY IS PASSED HERE
+                const response = await fetch('/summon', {{ 
+                    method: 'POST',
+                    headers: {{
+                        'X-Oracle-Key': '{WEB_SECRET_KEY}' 
+                    }}
+                }});
+                
                 const data = await response.json();
+                
                 setTimeout(() => {{
                     ball.classList.remove('shaking');
                     vText.innerText = data.verdict;
@@ -238,6 +274,7 @@ def dashboard():
                     setTimeout(() => {{ location.reload(); }}, 6000);
                 }}, 1000);
             }}
+            
             new Chart(document.getElementById('donutChart'), {{ type: 'doughnut', data: {{ labels: {json.dumps(donut_labels)}, datasets: [{{ data: {json.dumps(donut_values)}, backgroundColor: ['#ff3333', '#00ff41', '#0088ff', '#ffaa00', '#aa00ff'], borderColor: '#0d0d0d', borderWidth: 2 }}] }}, options: {{ plugins: {{ legend: {{ display: false }} }}, maintainAspectRatio: false }} }});
             new Chart(document.getElementById('barChart'), {{ type: 'bar', data: {{ labels: {json.dumps(bar_labels)}, datasets: [{{ label: 'Failures', data: {json.dumps(hourly_stats)}, backgroundColor: '#00ff41', borderColor: '#00ff41', borderWidth: 1 }}] }}, options: {{ scales: {{ x: {{ ticks: {{ color: '#00ff41' }}, grid: {{ color: '#333' }} }}, y: {{ ticks: {{ color: '#00ff41' }}, grid: {{ color: '#333' }} }} }}, plugins: {{ legend: {{ display: false }} }}, maintainAspectRatio: false }} }});
         </script>
@@ -245,29 +282,3 @@ def dashboard():
     </html>
     """
     return html_content
-
-# ==============================================================
-# THE RED BUTTON (Database Reset) - Kept Safely Commented Out
-# ==============================================================
-"""
-@app.get("/nuke_protocol_zero")
-def nuke_database():
-    print("☢️ NUKING DATABASE...")
-    try:
-        conn = db.get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute("DROP TABLE IF EXISTS interactions;")
-        cursor.execute("DROP TABLE IF EXISTS users;")
-        
-        conn.commit()
-        conn.close()
-        print("✅ Old tables destroyed.")
-        
-        db.initialize_db()
-        print("🏗️ New tables created.")
-        
-        return {"status": "SUCCESS. Database was nuked and rebuilt. You may now use the app."}
-    except Exception as e:
-        return {"status": "FAILED", "error": str(e)}
-"""
