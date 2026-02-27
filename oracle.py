@@ -36,7 +36,6 @@ class ProtocolZero:
         If they have a low streak, we go easy? NO. 
         Actually, let's invert it.
         If they JUST failed (streak 0), they get Tier 1 to get back on track?
-        No, Loki demands chaos. Randomly select a tier, weighted by their failure.
         """
         
         # simple logic: Random choice for now. 

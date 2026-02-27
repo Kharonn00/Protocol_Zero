@@ -3,6 +3,7 @@ import datetime
 import random
 import json
 import asyncio
+import html
 
 # Custom modules (files in the same project)
 from bot import client as discord_bot              # Imports the Discord bot client
@@ -144,15 +145,23 @@ def dashboard():
     donut_values = list(distribution.values())
     bar_labels = [f"{i:02d}:00" for i in range(24)]
     
-    # 3. Build History Table HTML
+    # 3. Build History Table HTML (SANITIZED)
     history_html = ""
     for row in history:
-        history_html += f"<tr><td>{row['time']}</td><td>{row['user']}</td><td style='color: #ff3333;'>{row['verdict']}</td></tr>"
+        # We escape the user inputs to neutralize malicious scripts
+        safe_time = html.escape(str(row['time']))
+        safe_user = html.escape(str(row['user']))
+        safe_verdict = html.escape(str(row['verdict']))
+        
+        history_html += f"<tr><td>{safe_time}</td><td>{safe_user}</td><td style='color: #ff3333;'>{safe_verdict}</td></tr>"
 
-    # 4. Build Leaderboard Table HTML
+    # 4. Build Leaderboard Table HTML (SANITIZED)
     leaderboard_html = ""
     for i, row in enumerate(leaderboard):
-        leaderboard_html += f"<tr><td>#{i+1}</td><td>{row['username']}</td><td>Lvl {row['level']}</td><td>{row['xp']} XP</td></tr>"
+        # We escape the username. Never trust user input. NEVER.
+        safe_username = html.escape(str(row['username']))
+        
+        leaderboard_html += f"<tr><td>#{i+1}</td><td>{safe_username}</td><td>Lvl {row['level']}</td><td>{row['xp']} XP</td></tr>"
 
     # 5. The Frontend Interface
     html_content = f"""

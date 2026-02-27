@@ -253,9 +253,19 @@ class DatabaseManager:
                     # Return None to signal that no XP was awarded
                     return None, None 
             except ValueError:
-                # If the date format is messed up in the DB, ignore and proceed (fail open)
-                # or reset it.
-                pass
+                # We do not fail open. We do not reward broken timelines.
+                # If your clock is shattered, you get nothing, and your timer restarts.
+                print(f"⚠️ [CHRONO-ERROR] {user_name}'s timestamp is corrupted! Resetting timeline.")
+                
+                # We must heal the database, or they will be locked out forever.
+                # Use the placeholder dynamically so it works for both SQLite and PostgreSQL
+                cursor.execute(f"UPDATE users SET last_active = {self.placeholder} WHERE discord_id = {self.placeholder}", 
+                               (current_time_str, str(user_id)))
+                conn.commit()
+                conn.close()
+                
+                # The Gatekeeper denies the XP.
+                return None, None
 
         # ====================================================================
         # STEP 2: THE ATOMIC UPDATE (If they passed the check)
