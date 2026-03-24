@@ -15,11 +15,15 @@ Built with an **Object-Oriented Architecture**, this engine treats "Willpower" n
 * **Hybrid Cloud Architecture:**
     * **Local:** Runs on lightweight **SQLite** for rapid development.
     * **Cloud:** Automatically switches to **PostgreSQL (Neon)** for immortal data persistence in production.
-* **Unified Process Management:** The **FastAPI** server and **Discord Bot** are fused into a single asynchronous event loop.
+* **Unified Process Management:** The **FastAPI** server and **Discord Bot** are fused into a single asynchronous event loop using modern `lifespan` context managers.
+* **Fortified Security & Optimization:**
+    * **The Gatekeeper (API Auth):** Protects POST endpoints via Dependency Injection to prevent unauthorized database spam and API quota drain.
+    * **XSS Protection:** Sanitizes all user inputs before rendering the HTML dashboard.
+    * **Fail-Closed State Management:** Handles corrupted chronologies via "Temporal Resets," preventing cooldown bypasses and state pollution without locking users out.
+    * **Memory Efficiency:** Utilizes Singleton patterns for the Oracle engine to minimize memory allocation and garbage collection overhead.
 * **DRY Business Logic:** Centralized database routing ensures web endpoints and Discord commands share a single, uncorrupted source of truth.
 * **RPG Progression System:**
-    * **XP & Leveling:** Gain XP for honesty (`!oracle`) and massive XP for resistance (`!resist`).
-    * **Atomic Transactions & Anti-Spam:** Database row-locking and timestamp-based cooldowns prevent users from "spamming" the resist command to farm XP. You cannot cheat the system.
+    * **Atomic Transactions:** Database row-locking and timestamp-based cooldowns prevent users from "spamming" the resist command to farm XP. 
     * **Streak Tracking:** The engine tracks consecutive victories. One failure shatters the streak to zero.
     * **Live Leaderboard:** Real-time ranking of the Top 5 Agents based on Level and XP.
 * **The Oracle V2 (Dynamic Judgement):**
@@ -54,6 +58,7 @@ To run the full stack locally, securely configure your `.env` file. Do not commi
     ```env
     DISCORD_TOKEN=your_discord_token_here
     GEMINI_API_KEY=your_google_ai_key_here
+    WEB_API_KEY=your_secure_gatekeeper_key_here
     
     # SAFE MODE (Optional)
     # Set to True to work on the FastAPI dashboard without connecting the Discord Bot.
@@ -81,7 +86,6 @@ Launch the stack locally on your machine.
 
 ```bash
 uvicorn api:app --reload
-
 ```
 
 * **Dashboard:** `http://127.0.0.1:8000/dashboard`
@@ -90,7 +94,6 @@ uvicorn api:app --reload
 ## 🗄️ The Archives (Data Persistence)
 
 Protocol Zero utilizes a **Bilingual Database Manager**:
-
 * **Cloud Mode (Render/Heroku):** Detects `DATABASE_URL` and connects to **Neon PostgreSQL**.
 * **Local Mode (Laptop):** Defaults to **SQLite** (`protocol_zero.db`) for isolated testing.
 * **Universal Adapter:** The system automatically swaps SQL syntax (`?` vs `%s`) based on the active environment, making deployments seamless.
