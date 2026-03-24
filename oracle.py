@@ -41,21 +41,25 @@ class ProtocolZero:
         # simple logic: Random choice for now. 
         # You can expand this to check previous failures later.
         
-        roll = random.random() # 0.0 to 1.0
+        roll = random.random()
         
-        if roll < 0.2:
-            tier = self.penance_tier_1
-            severity = "MILD"
-        elif roll < 0.8:
-            tier = self.penance_tier_2
-            severity = "STANDARD"
+        # Veterans get brutalized. New failures get eased back in.
+
+        if streak > 14:
+            weights = (0.05, 0.45, 0.50)
+        elif streak > 7:
+            weights = (0.10, 0.65, 0.25)
         else:
-            tier = self.penance_tier_3
-            severity = "BRUTAL"
-            
-        verdict = random.choice(tier)
-        
-        return f"[{severity}] {verdict}"
+            weights = (0.20, 0.60, 0.20)
+    
+        if roll < weights[0]:
+            tier, severity = self.penance_tier_1, "MILD"
+        elif roll < weights[0] + weights[1]:
+            tier, severity = self.penance_tier_2, "STANDARD"
+        else:
+            tier, severity = self.penance_tier_3, "BRUTAL"
+    
+        return f"[{severity}] {random.choice(tier)}"
 
 if __name__ == "__main__":
     p0 = ProtocolZero("Tester")

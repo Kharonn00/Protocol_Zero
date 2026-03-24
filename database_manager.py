@@ -213,18 +213,11 @@ class DatabaseManager:
     # GAMIFICATION METHODS - XP, Levels, and Progression
     # ========================================================================
     
-    def update_xp(self, user_id, user_name, xp_amount, cooldown_seconds=300):
-        """
-        Updates XP atomically, BUT ONLY IF the cooldown has passed.
-        Prevents spammers from farming XP.
-        
-        default cooldown_seconds = 300 (5 minutes). 
-        Adjust this number to change how often they can claim victory.
-        """
+    # Change the signature to include update_timer
+    def update_xp(self, user_id, user_name, xp_amount, cooldown_seconds=300, update_timer=True):
         conn = self.get_connection()
         cursor = conn.cursor()
         
-        # Get current time
         now = datetime.now()
         current_time_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -235,67 +228,70 @@ class DatabaseManager:
         result = cursor.fetchone()
 
         if result and result[0]:
-            # User exists, check their timestamp
             last_active_str = result[0]
             try:
-                # Convert database string back to datetime object
                 last_active = datetime.strptime(last_active_str, "%Y-%m-%d %H:%M:%S")
-                
-                # Calculate the difference
                 time_diff = now - last_active
                 seconds_passed = time_diff.total_seconds()
                 
                 if seconds_passed < cooldown_seconds:
-                    # SPAMMER DETECTED!
                     wait_time = int(cooldown_seconds - seconds_passed)
                     print(f"🚫 REJECTED: {user_name} is too greedy. Wait {wait_time}s.")
                     conn.close()
-                    # Return None to signal that no XP was awarded
                     return None, None 
             except ValueError:
-                # We do not fail open. We do not reward broken timelines.
-                # If your clock is shattered, you get nothing, and your timer restarts.
                 print(f"⚠️ [CHRONO-ERROR] {user_name}'s timestamp is corrupted! Resetting timeline.")
-                
-                # We must heal the database, or they will be locked out forever.
-                # Use the placeholder dynamically so it works for both SQLite and PostgreSQL
                 cursor.execute(f"UPDATE users SET last_active = {self.placeholder} WHERE discord_id = {self.placeholder}", 
                                (current_time_str, str(user_id)))
                 conn.commit()
                 conn.close()
-                
-                # The Gatekeeper denies the XP.
                 return None, None
 
         # ====================================================================
-        # STEP 2: THE ATOMIC UPDATE (If they passed the check)
+        # STEP 2: THE ATOMIC UPDATE (The Fix)
         # ====================================================================
-        
+        # If this is a new user failing for the first time, we must insert a dummy 
+        # old date so we don't accidentally lock them out of their first victory.
+        active_time_to_insert = current_time_str if update_timer else "2000-01-01 00:00:00"
+
         if self.is_postgres:
-            # PostgreSQL ON CONFLICT (Upsert)
-            query = """
-                INSERT INTO users (discord_id, username, xp, level, streak, last_active)
-                VALUES (%s, %s, %s, 1, 0, %s)
-                ON CONFLICT (discord_id) 
-                DO UPDATE SET 
-                    xp = users.xp + EXCLUDED.xp,
-                    username = EXCLUDED.username,
-                    last_active = EXCLUDED.last_active;
-            """
-            cursor.execute(query, (str(user_id), user_name, xp_amount, current_time_str))
+            if update_timer:
+                query = """
+                    INSERT INTO users (discord_id, username, xp, level, streak, last_active)
+                    VALUES (%s, %s, %s, 1, 0, %s)
+                    ON CONFLICT (discord_id) 
+                    DO UPDATE SET 
+                        xp = users.xp + EXCLUDED.xp,
+                        username = EXCLUDED.username,
+                        last_active = EXCLUDED.last_active;
+                """
+            else:
+                # Notice we removed the last_active update line here.
+                query = """
+                    INSERT INTO users (discord_id, username, xp, level, streak, last_active)
+                    VALUES (%s, %s, %s, 1, 0, %s)
+                    ON CONFLICT (discord_id) 
+                    DO UPDATE SET 
+                        xp = users.xp + EXCLUDED.xp,
+                        username = EXCLUDED.username;
+                """
+            cursor.execute(query, (str(user_id), user_name, xp_amount, active_time_to_insert))
             
         else:
-            # SQLite Manual Upsert
             cursor.execute("INSERT OR IGNORE INTO users (discord_id, username, xp, level, streak, last_active) VALUES (?, ?, 0, 1, 0, ?)", 
-                           (str(user_id), user_name, current_time_str))
+                           (str(user_id), user_name, active_time_to_insert))
             
-            cursor.execute("UPDATE users SET xp = xp + ?, username = ?, last_active = ? WHERE discord_id = ?", 
-                           (xp_amount, user_name, current_time_str, str(user_id)))
+            if update_timer:
+                cursor.execute("UPDATE users SET xp = xp + ?, username = ?, last_active = ? WHERE discord_id = ?", 
+                               (xp_amount, user_name, current_time_str, str(user_id)))
+            else:
+                # Leaves the existing last_active entirely alone
+                cursor.execute("UPDATE users SET xp = xp + ?, username = ? WHERE discord_id = ?", 
+                               (xp_amount, user_name, str(user_id)))
 
         # ====================================================================
-        # STEP 3: LEVEL UP CHECK
+        # STEP 3: LEVEL UP CHECK (Remains exactly the same)
         # ====================================================================
-        
         cursor.execute(f"SELECT xp, level FROM users WHERE discord_id = {self.placeholder}", (str(user_id),))
         row = cursor.fetchone()
         current_xp, current_level = row
@@ -542,11 +538,8 @@ class DatabaseManager:
         self.log_interaction(user_id, user_name, verdict)
         
         # 2. THE CONSOLATION PRIZE (XP & User Creation)
-        # We award 10 Pity XP. 
-        # Crucially, we set cooldown_seconds=0. Why? Because if you fail twice 
-        # in 5 minutes, the database MUST record both failures. We do not gatekeep weakness.
-        # This step also conveniently ensures the user exists in the database via our Upsert.
-        new_level, current_xp = self.update_xp(user_id, user_name, 10, cooldown_seconds=0)
+        # We pass update_timer=False so failing does not poison the !resist clock.
+        new_level, current_xp = self.update_xp(user_id, user_name, 10, cooldown_seconds=0, update_timer=False)
         
         # 3. THE FALL (Reset Streak)
         # Now that we know the user exists (thanks to step 2), we shatter their streak.
@@ -561,6 +554,33 @@ class DatabaseManager:
         
         # Return the updated stats so the bots and APIs can display them to the disgraced user.
         return new_level, current_xp
+
+    def register_resistance(self, user_id, user_name):
+        """The One True Function for handling victory."""
+        result = self.update_xp(user_id, user_name, 50)
+        
+        if result[0] is None:
+            return None, None, None  # Cooldown active
+    
+        new_level, new_xp = result
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            f"UPDATE users SET streak = streak + 1 WHERE discord_id = {self.placeholder}", 
+            (str(user_id),)
+        )
+        
+        cursor.execute(
+            f"SELECT streak FROM users WHERE discord_id = {self.placeholder}", 
+            (str(user_id),)
+        )
+        
+        current_streak = cursor.fetchone()[0]
+        conn.commit()
+        conn.close()
+        
+        return new_level, new_xp, current_streak
 
 
 # ============================================================================

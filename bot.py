@@ -104,30 +104,17 @@ async def on_message(message):
     # COMMAND: !resist (VICTORY)
     # ------------------------------------------------------------------
     elif message.content.startswith('!resist'):
-        result = db.update_xp(user_id, user_name, 50)
-        
-        if result[0] is None:
-            await message.channel.send(f"🚫 **{user_name}**, you are spamming. Discipline requires patience.")
+        new_level, new_xp, current_streak = db.register_resistance(user_id, user_name)
+    
+        if new_level is None:
+            await message.channel.send(f"🚫 **{user_name}**, you are spamming.")
             return
-
-        new_level, new_xp = result
-        
-        conn = db.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(f"UPDATE users SET streak = streak + 1 WHERE discord_id = {db.placeholder}", (user_id,))
-        conn.commit()
-        
-        cursor.execute(f"SELECT streak FROM users WHERE discord_id = {db.placeholder}", (user_id,))
-        current_streak = cursor.fetchone()[0]
-        conn.close()
-
+    
         praise = get_ai_response('praise', current_streak)
-
         embed = discord.Embed(title="🛡️ RESISTANCE CONFIRMED", color=0x00ff41)
         embed.add_field(name="Status", value="**Craving Neutralized.**", inline=False)
         embed.add_field(name="Oracle says:", value=f"_{praise}_", inline=False)
         embed.set_footer(text=f"Streak: {current_streak} 🔥 | Lvl: {new_level}")
-
         await message.channel.send(embed=embed)
 
     # ------------------------------------------------------------------

@@ -15,6 +15,7 @@ from fastapi import FastAPI                        # The main web framework for 
 from fastapi.responses import HTMLResponse         # Allows us to return HTML content
 from dotenv import load_dotenv                     # Loads environment variables from a .env file
 from google import genai                           # Google's Gemini AI library
+from contextlib import asynccontextmanager
 
 # The Serpent's defensive scales
 from fastapi import Security, HTTPException, status
@@ -61,34 +62,41 @@ else:
     print("WARNING: No Gemini Key found. Using backup roasts.")
 
 # ==============================================================
-# STEP 3: Initialize the Web Application and Database
+# STEP 3: Application Lifespan (The Modern Way)
 # ==============================================================
-app = FastAPI()
-db = DatabaseManager()
-
-# ==============================================================
-# STEP 4: Background Task - Start Discord Bot (CONDITIONAL)
-# ==============================================================
-@app.on_event("startup")
-async def start_discord_bot():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
-    Starts the Discord bot in the background.
+    Modern FastAPI lifespan manager. 
+    Everything before 'yield' runs on startup.
+    Everything after 'yield' runs on shutdown.
     """
     discord_token = os.getenv("DISCORD_TOKEN")
     disable_bot = os.getenv("DISABLE_BOT") 
 
     if disable_bot == "True":
         print("🛑 [CONFIG] Discord Bot is DISABLED locally (Safe Mode).")
-        return
-
-    if discord_token:
+    elif discord_token:
         print("🤖 Oracle is connecting to Discord...")
+        # Start the bot as a background task
         asyncio.create_task(discord_bot.start(discord_token))
     else:
         print("⚠️ Warning: No DISCORD_TOKEN found. Bot will not start.")
+        
+    # Hand control over to FastAPI to run the web server
+    yield
+    
+    # --- SHUTDOWN SEQUENCE ---
+    # When you press Ctrl+C, the code resumes here.
+    print("🌙 Oracle is entering sleep mode. Shutting down...")
+
+# Initialize the Web Application, Database, and Oracle
+app = FastAPI(lifespan=lifespan)
+db = DatabaseManager()
+oracle = ProtocolZero("Web_Agent")  # FIX: Spawned once, lives forever.
 
 # ==============================================================
-# STEP 5: Backup Roasts
+# STEP 4: Backup Roasts
 # ==============================================================
 BACKUP_ROASTS = [
     "The AI is offline, but you are still weak.",
@@ -128,10 +136,8 @@ def summon_oracle(api_key: str = Security(verify_api_key)):
     web_user_id = "WEB_USER_01"
     web_user_name = "Web_Agent"
     
-    engine = ProtocolZero(web_user_name) 
-    
-    # We pass streak=0 because web users are anonymous.
-    verdict = engine.consult_oracle(streak=0)
+    # LOKI FIX: We use the global instance. No more wasted memory.
+    verdict = oracle.consult_oracle(streak=0)
     
     roast = ""
     if client:
